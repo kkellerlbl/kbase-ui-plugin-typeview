@@ -46,7 +46,8 @@ define([
                 runtime = config.runtime,  
                 widgetSet = widgetSetFactory.make({
                     runtime: runtime
-                });
+                }),
+                content;
             
              function renderTypePanel() {
                 var div = html.tag('div');
@@ -64,6 +65,7 @@ define([
             // API
             function init(config) {
                 return Promise.try(function () {
+                    content = renderTypePanel();
                     return widgetSet.init(config);
                 });
             }
@@ -72,7 +74,7 @@ define([
                     mount = node;
                     container = document.createElement('div');
                     mount.appendChild(container);
-                    container.innerHTML = renderTypePanel();
+                    container.innerHTML = content;
                     return widgetSet.attach(container);
                 });
             }
