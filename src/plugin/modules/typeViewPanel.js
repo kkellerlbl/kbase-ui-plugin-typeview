@@ -80,7 +80,7 @@ define([
             }
             function start(params) {
                 return Promise.try(function () {
-                    runtime.send('ui', 'setTitle', rendered.title);
+                    runtime.send('ui', 'setTitle', 'Type View Specifcation');
                     return widgetSet.start(params);
                 });
             }
