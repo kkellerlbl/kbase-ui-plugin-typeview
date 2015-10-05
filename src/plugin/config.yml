@@ -47,6 +47,7 @@ install:
         -
             module: kb_panel_moduleView
             id: kb_typeview_moduleViewPanel
+            type: factory
         #-
         #    module: kb_panel_functionView
         #    id: kb_typeview_functionViewPanel
@@ -57,6 +58,7 @@ install:
         -
             module: kb_widget_moduleSpecification
             id: kb_typeview_moduleSpec
+            type: factory
         #-
         #    module: kb_widget_FunctionSpecification
         #    id: kb_typeview_functionSpec
