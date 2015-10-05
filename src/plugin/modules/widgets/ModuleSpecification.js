@@ -13,7 +13,8 @@ define([
     'kb_service_workspace',
     'kb_spec_common',
     'google-code-prettify',
-    'kb_common_format'],
+    'kb_common_format',
+    'datatables_bootstrap'],
     function ($, Promise, _, html, Workspace, specCommon, PR, Format) {
         'use strict';
 
@@ -21,7 +22,7 @@ define([
         /* TODO: use specific arguments */
         var factory = function (config) {
 
-            var mount, container, $container, children = [], runtime = config.runtime;
+            var mount, container, $container, runtime = config.runtime;
 
             var workspace = new Workspace(runtime.getConfig('workspace_url', {
                 token: runtime.getService('session').getAuthToken()

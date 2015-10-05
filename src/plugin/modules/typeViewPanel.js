@@ -13,34 +13,6 @@ define([
     function (Promise, html, widgetSetFactory) {
         'use strict';
 
-//        function renderTypePanel(params) {
-//            return new Promise(function (resolve) {
-//
-//                // Widgets
-//                // Widgets are an array of functions or promises which are 
-//                // invoked later...
-//                var widgetSet = wigetSet.make({
-//                    runtime: runtime
-//                })
-//
-//                // Render panel
-//                var div = html.tag('div');
-//                var panel = div({class: 'kbase-view kbase-spec-view container-fluid', 'data-kbase-view': 'spec'}, [
-//                    div({class: 'row'}, [
-//                        div({class: 'col-sm-12'}, [
-//                            //div({id: addJQWidget('cardlayoutmanager', 'KBaseCardLayoutManager')}),
-//                            div({id: widgets.addFactoryWidget('datatypespec', DataTypeSpecWidget)})
-//                        ])
-//                    ])
-//                ]);
-//                resolve({
-//                    title: 'Data Type Specification',
-//                    content: panel,
-//                    widgets: widgets.getWidgets()
-//                });
-//            });
-//        }
-
         function widget(config) {
             var mount, container,
                 runtime = config.runtime,
@@ -65,9 +37,7 @@ define([
             // API
             function init(config) {
                 return Promise.try(function () {
-                    console.log('rendered?');
                     content = renderTypePanel();
-                    console.log(content);
                     return widgetSet.init(config);
                 });
             }
@@ -84,6 +54,11 @@ define([
                 return Promise.try(function () {
                     runtime.send('ui', 'setTitle', 'Type View Specifcation');
                     return widgetSet.start(params);
+                });
+            }
+            function run(params) {
+                return Promise.try(function () {
+                    return widgetSet.run(params);
                 });
             }
             function stop() {
@@ -106,6 +81,7 @@ define([
                 init: init,
                 attach: attach,
                 start: start,
+                run: run,
                 stop: stop,
                 detach: detach,
                 destroy: destroy

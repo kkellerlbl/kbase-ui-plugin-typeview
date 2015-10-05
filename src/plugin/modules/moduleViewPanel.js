@@ -8,124 +8,71 @@
 define([
     'bluebird',
     'kb_common_html',
-    'kb_widgetCollection', 
-    'kb_widget_moduleSpecification'
+    'kb_common_widgetSet'
 ],
-    function (Promise, html, WidgetCollection, ModuleSpecWidget) {
+    function (Promise, html, widgetSetFactory) {
         'use strict';
-        function renderModulePanel(params) {
-            return new Promise(function (resolve) {
+       
 
-                // Widgets
-                // Widgets are an array of functions or promises which are 
-                // invoked later...
-                var widgets = WidgetCollection.make();
-
-                // Render panel
+        function widget(config) {
+            var mount, container, children = [], runtime = config.runtime,
+                widgetSet = widgetSetFactory.make(), content;
+            
+            
+             function renderModulePanel(params) {
                 var div = html.tag('div');
-                var panel = div({class: 'kbase-view kbase-spec-view container-fluid', 'data-kbase-view': 'spec'}, [
+                return div({class: 'kbase-view kbase-spec-view container-fluid', 'data-kbase-view': 'spec'}, [
                     div({class: 'row'}, [
                         div({class: 'col-sm-12'}, [
                             //div({id: addJQWidget('cardlayoutmanager', 'KBaseCardLayoutManager')}),
                             //div({id: widgets.addFactoryWidget('datatypespec', ModuleSpecWidget, {
                             //    moduleid: params.moduleid
                             //    })})
-                            div({id: widgets.addFactoryWidget('datatypespec', ModuleSpecWidget)})
+                            div({id: widgetSet.addWidget('kb_typeview_dataTypeSpec')})
                         ])
                     ])
                 ]);
-                resolve({
-                    title: 'Data Type Specification',
-                    content: panel,
-                    widgets: widgets.getWidgets()
-                });
-            });
-        }
-
-        function widget(config) {
-            var mount, container, children = [], runtime = config.runtime;
+            }
+            
+            
             function init(config) {
-                return new Promise(function (resolve) {
-                    resolve();
+                Promise.try(function () {
+                    content = renderModulePanel();
+                    return widgetSet.init(config);
                 });
             }
             function attach(node) {
-                return new Promise(function (resolve) {
+               Promise.try(function () {
                     mount = node;
                     container = document.createElement('div');
                     mount.appendChild(container);
-                    resolve();
+                    return widgetSet.attach(node);
                 });
             }
             function start(params) {
-                return new Promise(function (resolve, reject) {
-                    renderModulePanel(params)
-                        .then(function (rendered) {
-                            container.innerHTML = rendered.content;
-                            runtime.send('ui', 'setTitle', 'Loading: ' + rendered.title);
-                            // create widgets.
-                            children = rendered.widgets;
-                            Promise.all(children.map(function (w) {
-                                return w.widget.create(w.config);
-                            }))
-                                .then(function () {
-                                    Promise.all(children.map(function (w) {
-                                        return w.widget.attach($('#' + w.id).get(0));
-                                    }))
-                                        .then(function (results) {
-                                            Promise.all(children.map(function (w) {
-                                                return w.widget.start(params);
-                                            }))
-                                                .then(function (results) {
-                                                    runtime.send('ui', 'setTitle', rendered.title);
-                                                    resolve();
-                                                })
-                                                .catch(function (err) {
-                                                    R.logError({
-                                                        message: 'Starting widget',
-                                                        exception: err
-                                                    });
-                                                    reject(err);
-                                                })
-                                                .done();
-                                        })
-                                        .catch(function (err) {
-                                            R.logError({
-                                                message: 'Attaching widget',
-                                                exception: err
-                                            });
-                                            reject(err);
-                                        })
-                                        .done();
-                                })
-                                .catch(function (err) {
-                                    R.logError({
-                                        message: 'Creating widget',
-                                        exception: err
-                                    });
-                                    reject(err);
-                                })
-                                .done();
-                        })
-                        .catch(function (err) {
-                            R.logError({
-                                message: 'ERROR rendering module view',
-                                exception: err
-                            });
-                            reject(err);
-                        })
-                        .done();
+                return Promise.try(function () {
+                    runtime.send('ui', 'setTitle', 'Module View');
+                    return widgetSet.start(params);
+                });
+            }
+            function run(params) {
+                return Promise.try(function () {
+                    return widgetSet.run(params);
                 });
             }
             function stop() {
-                return new Promise(function (resolve) {
-                    resolve();
-
+                return Promise.try(function () {
+                    return widgetSet.stop();
                 });
             }
             function detach() {
-                return new Promise(function (resolve) {
-                    resolve();
+                return Promise.try(function () {
+                    return widgetSet.detach();
+                });
+            }
+            function destroy() {
+                return Promise.try(function () {
+                    return widgetSet.destroy();
                 });
             }
 
@@ -133,8 +80,10 @@ define([
                 init: init,
                 attach: attach,
                 start: start,
+                run: run,
                 stop: stop,
-                detach: detach
+                detach: detach,
+                destroy: destroy
             };
         }
         ;
