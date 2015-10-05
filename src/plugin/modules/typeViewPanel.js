@@ -43,19 +43,14 @@ define([
 
         function widget(config) {
             var mount, container, children = [], 
-                runtime = config.runtime;
+                runtime = config.runtime,  
+                widgetSet = widgetSet.make({
+                    runtime: runtime
+                });
             
              function renderTypePanel() {
-                // Widgets
-                // Widgets are an array of functions or promises which are 
-                // invoked later...
-                var widgetSet = widgetSet.make({
-                    runtime: runtime
-                })
-
-                // Render panel
                 var div = html.tag('div');
-                var panel = div({class: 'kbase-view kbase-spec-view container-fluid', dataKbaseView: 'spec'}, [
+                return div({class: 'kbase-view kbase-spec-view container-fluid', dataKbaseView: 'spec'}, [
                     div({class: 'row'}, [
                         div({class: 'col-sm-12'}, [
                             //div({id: addJQWidget('cardlayoutmanager', 'KBaseCardLayoutManager')}),
@@ -63,7 +58,6 @@ define([
                         ])
                     ])
                 ]);
-                return panel;
             }
             
             
