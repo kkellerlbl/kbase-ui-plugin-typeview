@@ -8,29 +8,19 @@
 define([
     'jquery',
     'bluebird',
-    'underscore',
-    'kb.runtime',
-    'kb.html',
-    'kb.service.workspace',
+    'kb_common_html',
+    'kb_common_utils',
+    'kb_service_workspace',
     'kb_spec_common',
-    'google-code-prettify',
-    'kb.format'],
-    function ($, Promise, _, R, html, Workspace, specCommon, PR, Format) {
+    'google-code-prettify'],
+    function ($, Promise, html, Utils, Workspace, specCommon, PR) {
         'use strict';
 
         // Just take params for now
         /* TODO: use specific arguments */
-        var factory = function (params) {
-
-            var mount, container, $container, children = [];
-
-            var workspace = new Workspace(R.getConfig('workspace_url', {
-                token: R.getAuthToken()
-            }));
-
-            var functionId, moduleName, functionName, functionVersion;
-
-
+        var factory = function (config) {
+            var mount, container, $container, children = [], runtime = config.runtime;
+            var dataType, moduleName, typeName, typeVersion;
 
             // tags used in this module.
             var table = html.tag('table'),
@@ -41,8 +31,11 @@ define([
                 div = html.tag('div'),
                 pre = html.tag('pre'),
                 ul = html.tag('ul'),
-                li = html.tag('li');
-
+                li = html.tag('li'),
+                bstable = function (cols, rows) {
+                    return html.makeTable({columns: cols, rows: rows, class: 'table'});
+                }
+            
             function tabTableContent() {
                 return table({
                     class: 'table table-striped table-bordered',
@@ -52,28 +45,22 @@ define([
 
             // OVERVIEW Tab
             function overviewTab(data) {
-                var username = R.getUsername()
-                    
-                var matched = data.func_def.match(/-/),
-                    funcName = matched[1],
-                    funcVersion = matched[2];
-                
-                var moduleLinks = data.module_vers.map(function (moduleVersion) {
-                    var moduleId = moduleName + '.' + moduleVersion;
-                    return a({href: '#spec/module/' + moduleId}, moduleVersion);
-                });
-
                 return table({class: 'table table-striped table-bordered',
                     style: 'margin-left: auto; margin-right: auto'}, [
-                    tr([th('Name'), td(funcName)]),
-                    tr([th('Version'), td(funcVersion)]),
-                    tr([th('Module version(s)'), td(moduleLinks.join(', '))]),
-                    /* TODO: improve date formatting */
+                    tr([th('Name'), td(typeName)]),
+                    tr([th('Version'), td(typeVersion)]),
+                    tr([th('Module version(s)'), td(
+                            bstable(['Version id', 'Created at'], data.module_vers.map(function (moduleVer) {
+                                var moduleId = moduleName + '-' + moduleVer;
+                                return [a({href: '#spec/module/'+moduleId}, moduleVer), 
+                                        Utils.niceTimestamp(parseInt(moduleVer, 10))];
+                            })))]),
                     tr([th('Description'), td(pre({style: {'white-space': 'pre-wrap', 'word-wrap': 'break-word'}}, data.description))])
                 ]);
+                /* TODO: Add back in the kidl editor -- need to talk to Roman */
             }
 
-           // SPEC FILE Tab
+            // SPEC FILE Tab
             function specFileTab(data) {
                 var specText = specCommon.replaceMarkedTypeLinksInSpec(moduleName, data.spec_def, 'links-click');
                 var content = div({style: {width: '100%'}}, [
@@ -84,6 +71,79 @@ define([
                     widget: {
                         attach: function (node) {
                             PR.prettyPrint(null, node.get(0));
+                        }
+                    }
+                };
+            }
+
+            // FUNCTIONS Tab
+            function functionsTab(data) {
+                // Build The table more functionally, using datatables.
+                var tableData = data.using_func_defs.map(function (funcId) {
+                    var parsed = funcId.match(/^(.+?)-(.+?)$/),
+                        funcName = parsed[1],
+                        funcVer = parsed[2];
+
+                    return {
+                        name: a({href: '#spec/functions/'+funcId}, funcName),
+                        ver: funcVer
+                    };
+                });
+                var tableSettings = {
+                    sPaginationType: 'full_numbers',
+                    iDisplayLength: 10,
+                    aoColumns: [
+                        {sTitle: 'Function name', mData: 'name'},
+                        {sTitle: 'Function version', mData: 'ver'}
+                    ],
+                    aaData: tableData,
+                    oLanguage: {
+                        sSearch: 'Search function:',
+                        sEmptyTable: 'No functions use this type'
+                    }
+                };
+
+                return {
+                    content: tabTableContent(),
+                    widget: {
+                        attach: function (node) {
+                            $(node).find('[data-attach="table"]').dataTable(tableSettings);
+                        }
+                    }
+                };
+            }
+
+            // USING TYPES Tab
+            function usingTypesTab(data) {
+                var tableData = data.using_type_defs.map(function (typeId) {
+                    var parsed = typeId.match(/^(.+?)-(.+?)$/),
+                        typeName = parsed[1],
+                        typeVer = parsed[2];
+
+                    return {
+                        name: a({href: '#spec/type/' + typeId}, typeName),
+                        ver: typeVer
+                    };
+                });
+                var tableSettings = {
+                    sPaginationType: 'full_numbers',
+                    iDisplayLength: 10,
+                    aoColumns: [
+                        {sTitle: 'Type name', mData: 'name'},
+                        {sTitle: 'Type version', mData: 'ver'}
+                    ],
+                    aaData: tableData,
+                    oLanguage: {
+                        sSearch: 'Search types:',
+                        sEmptyTable: 'No types use this type'
+                    }
+                };
+
+                return {
+                    content: tabTableContent(),
+                    widget: {
+                        attach: function (node) {
+                            $(node).find('[data-attach="table"]').dataTable(tableSettings);
                         }
                     }
                 };
@@ -126,22 +186,22 @@ define([
 
             // VERSIONS Tab
             function versionsTab(data) {
-                var tableData = data.func_vers.map(function (funcId) {
-                    var parsed = funcId.match(/^(.+?)-(.+?)$/),
-                        funcName = parsed[1],
-                        funcVer = parsed[2];
+                var tableData = data.type_vers.map(function (typeId) {
+                    var parsed = typeId.match(/^(.+?)-(.+?)$/),
+                        typeName = parsed[1],
+                        typeVer = parsed[2];
 
                     return {
-                        name: a({href: '#spec/function/'+funcId}, funcName),
-                        ver: funcVer
+                        name: a({href: '#spec/type/'+typeId}, typeName),
+                        ver: typeVer
                     };
                 });
                 var tableSettings = {
                     sPaginationType: 'full_numbers',
                     iDisplayLength: 10,
                     aoColumns: [
-                        {sTitle: 'Function name', mData: 'name'},
-                        {sTitle: 'Function version', mData: 'ver'}
+                        {sTitle: 'Type name', mData: 'name'},
+                        {sTitle: 'Type version', mData: 'ver'}
                     ],
                     aaData: tableData,
                     oLanguage: {
@@ -160,19 +220,24 @@ define([
             }
 
             function render() {
-                return new Promise(function (resolve, reject) {
-                    Promise.resolve(workspace.get_func_info(functionId))
-                        .then(function (data) {
-                                var tabs = [
-                                    {title: 'Overview', id: 'overview', content: overviewTab},
-                                    {title: 'Spec-file', id: 'spec', content: specFileTab},
-                                    {title: 'Sub-types', id: 'subs', content: subTypesTab},
-                                    {title: 'Versions', id: 'vers', content: versionsTab}
-                                ],
-                                id = '_' + html.genId(),
-                                widgets = [];
+                var workspace = new Workspace(R.getConfig('workspace_url', {
+                    token: runtime.getService('session').getAuthToken()
+                }));
 
-                            var content = div([
+                Promise.resolve(workspace.get_type_info(dataType))
+                    .then(function (data) {
+                        var tabs = [
+                            {title: 'Overview', id: 'overview', content: overviewTab},
+                            {title: 'Spec-file', id: 'spec', content: specFileTab},
+                            {title: 'Functions', id: 'funcs', content: functionsTab},
+                            {title: 'Using Types', id: 'types', content: usingTypesTab},
+                            {title: 'Sub-types', id: 'subs', content: subTypesTab},
+                            {title: 'Versions', id: 'vers', content: versionsTab}
+                        ],
+                            id = '_' + html.genId(),
+                            widgets = [];
+
+                        var content = div([
                                 ul({id: id, class: 'nav nav-tabs'},
                                     tabs.map(function (tab) {
                                         var active = (tab.id === 'overview') ? 'active' : '';
@@ -200,31 +265,30 @@ define([
                                 })
                                     )
                             ]);
-                            $container.html(content);
-                            widgets.forEach(function (widget) {
-                                widget.widget.attach($('#' + widget.id));
-                            });
-                            PR.prettyPrint();
-                            resolve();
-                        })
-                        .catch(function (err) {
-                            reject(err);
-                            //var error = 'Error rendering widget';
-                            //console.log(err);
-                            //container.html(error);
-                        })
-                        .done();
-                });
+                        $container.html(content);
+                        widgets.forEach(function (widget) {
+                            widget.widget.attach($('#' + widget.id));
+                        });
+                        PR.prettyPrint();
+                    })
+                    .catch(function (err) {
+                        var error = 'Error rendering widget';
+                        console.log(err);
+                        $container.html(error);
+                    })
+                    .done();
             }
-
+            
             // API
+            
+            var mount, container, $container, children = [];
             
             function create() {
                 return new Promise(function (resolve) {
                     resolve();
                 });
             }
-            
+
             function attach(node) {
                 return new Promise(function (resolve) {
                     mount = node;
@@ -237,38 +301,34 @@ define([
             
             function detach() {
                 return new Promise(function (resolve) {
-                    container.empty();
+                    $container.empty();
                     resolve();
                 });
             }
 
             function start(params) {
-                return new Promise(function (resolve, reject) {
+                return new Promise(function (resolve) {
                     $container.html(html.loading());
-
+                
                     // Parse the data type, throwing exceptions if malformed.
-                    functionId = params.functionid;
-                    var matched = functionId.match(/^(.+?)-(.+)\.(.+)$/);
+                    dataType = params.datatype;
+                    var matched = dataType.match(/^(.+?)\.(.+?)-(.+)$/);
                     if (!matched) {
-                        throw new Error('Invalid function id ' + functionId);
+                        throw new Error('Invalid data type ' + dataType);
                     }
                     if (matched.length !== 4) {
-                        throw new Error('Invalid function id ' + functionId);
+                        throw new Error('Invalid data type ' + dataType);
                     }
 
                     moduleName = matched[1];
-                    functionName = matched[2];
-                    functionVersion = matched[3];
+                    typeName = matched[1] + '.' + matched[2];
+                    typeVersion = matched[3];
 
-                    render()
-                        .then(function () {
-                            resolve();
-                        })
-                        .catch(function (err) {
-                            reject(err);
-                        })
-                        .done();
-
+                    /* TODO: reign this puppy in... */
+                    // This is a promise that isn't returned ... so it just goes off by itself.
+                    render();
+                    
+                    resolve();
                 });
             }
 
@@ -288,8 +348,8 @@ define([
         };
 
         return {
-            create: function (params) {
-                return factory(params);
+            create: function (config) {
+                return factory(config);
             }
         };
     });

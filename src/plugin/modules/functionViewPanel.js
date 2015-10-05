@@ -6,16 +6,14 @@
  white: true
  */
 define([
-    'bluebird',
-    'kb.runtime',
-    'kb.html',
+    'promise',
+    'kb_common_html',
     'kb_widgetCollection', 
-    'kb_widget_dataTypeSpecification'
+    'kb_widget_FunctionSpecification'
 ],
-    function (Promise, R, html, WidgetCollection, DataTypeSpecWidget) {
+    function (Promise, html, WidgetCollection, FunctionSpecWidget) {
         'use strict';
-
-        function renderTypePanel(params) {
+        function renderFunctionPanel(params) {
             return new Promise(function (resolve) {
 
                 // Widgets
@@ -29,7 +27,7 @@ define([
                     div({class: 'row'}, [
                         div({class: 'col-sm-12'}, [
                             //div({id: addJQWidget('cardlayoutmanager', 'KBaseCardLayoutManager')}),
-                            div({id: widgets.addFactoryWidget('datatypespec', DataTypeSpecWidget)})
+                            div({id: widgets.addFactoryWidget('functiontspec', FunctionSpecWidget)})
                         ])
                     ])
                 ]);
@@ -40,10 +38,8 @@ define([
                 });
             });
         }
-
         function widget(config) {
             var mount, container, $container, children = [];
-
             function init(config) {
                 return new Promise(function (resolve) {
                     resolve();
@@ -60,10 +56,10 @@ define([
             }
             function start(params) {
                 return new Promise(function (resolve, reject) {
-                    renderTypePanel(params)
+                    renderFunctionPanel(params)
                         .then(function (rendered) {
                             container.innerHTML = rendered.content;
-                            R.send('app', 'title', rendered.title);
+                            runtime.send('ui', 'setTitle', rendered.title);
                             // create widgets.
                             children = rendered.widgets;
                             Promise.all(children.map(function (w) {

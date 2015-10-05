@@ -9,28 +9,25 @@ define([
     'jquery',
     'bluebird',
     'underscore',
-    'kb.runtime',
-    'kb.html',
-    'kb.service.workspace',
+    'kb_common_html',
+    'kb_service_workspace',
     'kb_spec_common',
     'google-code-prettify',
-    'kb.format'],
-    function ($, Promise, _, R, html, Workspace, specCommon, PR, Format) {
+    'kb_common_format'],
+    function ($, Promise, _, html, Workspace, specCommon, PR, Format) {
         'use strict';
 
         // Just take params for now
         /* TODO: use specific arguments */
-        var factory = function (params) {
+        var factory = function (config) {
 
-            var mount, container, $container, children = [];
+            var mount, container, $container, widgets = [], runtime = config.runtime;
 
-            var workspace = new Workspace(R.getConfig('workspace_url', {
-                token: R.getAuthToken()
+            var workspace = new Workspace(runtime.getConfig('services.workspace.url', {
+                token: runtime.getService('session').getAuthToken()
             }));
 
-            var moduleName, moduleVersion;
-
-
+            var functionId, moduleName, functionName, functionVersion;
 
             // tags used in this module.
             var table = html.tag('table'),
@@ -52,25 +49,28 @@ define([
 
             // OVERVIEW Tab
             function overviewTab(data) {
-                var username = R.getUsername(),
-                    isOwner = _.some(data.owners, function (item) {
-                        return (item === username);
-                    });
+                var matched = data.func_def.match(/-/),
+                    funcName = matched[1],
+                    funcVersion = matched[2];
+                
+                var moduleLinks = data.module_vers.map(function (moduleVersion) {
+                    var moduleId = moduleName + '.' + moduleVersion;
+                    return a({href: '#spec/module/' + moduleId}, moduleVersion);
+                });
 
                 return table({class: 'table table-striped table-bordered',
                     style: 'margin-left: auto; margin-right: auto'}, [
-                    tr([th('Name'), td(moduleName)]),
-                    tr([th('Owners'), td(data.owners.join(', '))]),
-                    tr([th('Version'), td(moduleVersion)]),
+                    tr([th('Name'), td(funcName)]),
+                    tr([th('Version'), td(funcVersion)]),
+                    tr([th('Module version(s)'), td(moduleLinks.join(', '))]),
                     /* TODO: improve date formatting */
-                    tr([th('Upload time'), td(Format.niceTime(data.ver))]),
                     tr([th('Description'), td(pre({style: {'white-space': 'pre-wrap', 'word-wrap': 'break-word'}}, data.description))])
                 ]);
             }
 
-            // SPEC FILE Tab
+           // SPEC FILE Tab
             function specFileTab(data) {
-                var specText = specCommon.replaceMarkedTypeLinksInSpec(moduleName, data.spec, 'links-click');
+                var specText = specCommon.replaceMarkedTypeLinksInSpec(moduleName, data.spec_def, 'links-click');
                 var content = div({style: {width: '100%'}}, [
                     pre({class: 'prettyprint lang-spec'}, specText)
                 ]);
@@ -84,54 +84,16 @@ define([
                 };
             }
 
-            // FUNCTIONS Tab
-            function functionsTab(data) {
-                // Build The table more functionally, using datatables.
-                var tableData = data.functions.map(function (funcId) {
-                    var parsed = funcId.match(/^(.+?)-(.+?)$/),
-                        funcName = parsed[1],
-                        funcVer = parsed[2];
-
-                    return {
-                        name: a({href: '#', 'data-action': 'spec-functions', 'data-funcid': funcId}, funcName),
-                        ver: funcVer
-                    };
-                });
-                var tableSettings = {
-                    sPaginationType: 'full_numbers',
-                    iDisplayLength: 10,
-                    aoColumns: [
-                        {sTitle: 'Function name', mData: 'name'},
-                        {sTitle: 'Function version', mData: 'ver'}
-                    ],
-                    aaData: tableData,
-                    oLanguage: {
-                        sSearch: 'Search function:',
-                        sEmptyTable: 'No functions use this type'
-                    }
-                };
-
-                return {
-                    content: tabTableContent(),
-                    widget: {
-                        attach: function (node) {
-                            $(node).find('[data-attach="table"]').dataTable(tableSettings);
-                        }
-                    }
-                };
-            }
-
-            // TYPES Tab
-            function typesTab(data) {
-
-                var tableData = Object.keys(data.types).map(function (typeId) {
+            // SUB TYPES Tab
+            function subTypesTab(data) {
+                var tableData = data.used_type_defs.map(function (typeId) {
                     var parsed = typeId.match(/^(.+?)-(.+?)$/),
-                        name = parsed[1],
-                        version = parsed[2];
+                        typeName = parsed[1],
+                        typeVer = parsed[2];
 
                     return {
-                        name: a({href: '#spec/type/' + typeId}, name),
-                        ver: version
+                        name: a({href: '#spec/type/'+typeId}, typeName),
+                        ver: typeVer
                     };
                 });
                 var tableSettings = {
@@ -144,42 +106,7 @@ define([
                     aaData: tableData,
                     oLanguage: {
                         sSearch: 'Search types:',
-                        sEmptyTable: 'No types registered'
-                    }
-                };
-
-                return {
-                    content: tabTableContent(),
-                    widget: {
-                        attach: function (node) {
-                            $(node).find('[data-attach="table"]').dataTable(tableSettings);
-                        }
-                    }
-                };
-            }
-
-            // INCLUDED MODULES Tab
-            function includedModulesTab(data) {
-
-                var tableData = Object.keys(data.included_spec_version).map(function (name) {
-                    var version = data.included_spec_version[name],
-                        id = name + '-' + version;
-                    return {
-                        name: a({href: '#spec/module/' + id}, name),
-                        ver: version
-                    };
-                });
-                var tableSettings = {
-                    sPaginationType: 'full_numbers',
-                    iDisplayLength: 10,
-                    aoColumns: [
-                        {sTitle: 'Module name', mData: 'name'},
-                        {sTitle: 'Module version', mData: 'ver'}
-                    ],
-                    aaData: tableData,
-                    oLanguage: {
-                        sSearch: 'Search module:',
-                        sEmptyTable: 'No included modules used.'
+                        sEmptyTable: 'No types use this type'
                     }
                 };
                 return {
@@ -194,55 +121,34 @@ define([
 
             // VERSIONS Tab
             function versionsTab(data) {
+                var tableData = data.func_vers.map(function (funcId) {
+                    var parsed = funcId.match(/^(.+?)-(.+?)$/),
+                        funcName = parsed[1],
+                        funcVer = parsed[2];
+
+                    return {
+                        name: a({href: '#spec/function/'+funcId}, funcName),
+                        ver: funcVer
+                    };
+                });
+                var tableSettings = {
+                    sPaginationType: 'full_numbers',
+                    iDisplayLength: 10,
+                    aoColumns: [
+                        {sTitle: 'Function name', mData: 'name'},
+                        {sTitle: 'Function version', mData: 'ver'}
+                    ],
+                    aaData: tableData,
+                    oLanguage: {
+                        sSearch: 'Search versions:',
+                        sEmptyTable: 'No versions registered'
+                    }
+                };
                 return {
                     content: tabTableContent(),
                     widget: {
                         attach: function (node) {
-                            Promise.resolve(workspace.list_module_versions({mod: moduleName}))
-                                .then(function (data) {
-                                    var tableData = data.vers.map(function (version) {
-                                        if (version === moduleVersion) {
-                                            return {
-                                                name: '' + version + ' (current)',
-                                                date: version
-                                            };
-                                        } else {
-                                            return {
-                                                name: a({href: '#spec/module/' + moduleName + '-' + version}, version),
-                                                date: version
-                                            };
-                                        }
-                                    });
-                                    var tableSettings = {
-                                        sPaginationType: 'full_numbers',
-                                        iDisplayLength: 10,
-                                        aoColumns: [
-                                            {sTitle: 'Module version', mData: 'name'},
-                                            {sTitle: 'Upload date', mData: function (row, type) {
-                                                    switch (type) {
-                                                        case 'display':
-                                                            return Format.niceTime(row.date);
-                                                            break;
-                                                        default:
-                                                            return row.date;
-                                                        }
-                                                }}
-                                        ],
-                                        aaData: tableData,
-                                        oLanguage: {
-                                            sSearch: 'Search versions:',
-                                            sEmptyTable: 'No versions registered.'
-                                        }
-                                    };
-
-                                    $(node).find('[data-attach="table"]').dataTable(tableSettings);
-                                })
-                                .catch(function (err) {
-                                    console.log('ERROR');
-                                    console.log(err);
-
-                                })
-                                .done();
+                            $(node).find('[data-attach="table"]').dataTable(tableSettings);
                         }
                     }
                 };
@@ -250,16 +156,14 @@ define([
 
             function render() {
                 return new Promise(function (resolve, reject) {
-                    Promise.resolve(workspace.get_module_info({mod: moduleName, ver: moduleVersion}))
+                    Promise.resolve(workspace.get_func_info(functionId))
                         .then(function (data) {
-                            var tabs = [
-                                {title: 'Overview', id: 'overview', content: overviewTab},
-                                {title: 'Spec-file', id: 'spec', content: specFileTab},
-                                {title: 'Types', id: 'types', content: typesTab},
-                                {title: 'Functions', id: 'funcs', content: functionsTab},
-                                {title: 'Included modules', id: 'inc', content: includedModulesTab},
-                                {title: 'Versions', id: 'vers', content: versionsTab}
-                            ],
+                                var tabs = [
+                                    {title: 'Overview', id: 'overview', content: overviewTab},
+                                    {title: 'Spec-file', id: 'spec', content: specFileTab},
+                                    {title: 'Sub-types', id: 'subs', content: subTypesTab},
+                                    {title: 'Versions', id: 'vers', content: versionsTab}
+                                ],
                                 id = '_' + html.genId(),
                                 widgets = [];
 
@@ -325,6 +229,7 @@ define([
                     resolve();
                 });
             }
+            
             function detach() {
                 return new Promise(function (resolve) {
                     container.empty();
@@ -337,17 +242,18 @@ define([
                     $container.html(html.loading());
 
                     // Parse the data type, throwing exceptions if malformed.
-                    var moduleId = params.moduleid;
-                    var matched = moduleId.match(/^(.+?)-(.+)$/);
+                    functionId = params.functionid;
+                    var matched = functionId.match(/^(.+?)-(.+)\.(.+)$/);
                     if (!matched) {
-                        throw new Error('Invalid module id ' + moduleId);
+                        throw new Error('Invalid function id ' + functionId);
                     }
-                    if (matched.length !== 3) {
-                        throw new Error('Invalid module id ' + moduleId);
+                    if (matched.length !== 4) {
+                        throw new Error('Invalid function id ' + functionId);
                     }
 
                     moduleName = matched[1];
-                    moduleVersion = matched[2];
+                    functionName = matched[2];
+                    functionVersion = matched[3];
 
                     render()
                         .then(function () {
@@ -377,8 +283,8 @@ define([
         };
 
         return {
-            create: function (params) {
-                return factory(params);
+            create: function (config) {
+                return factory(config);
             }
         };
     });

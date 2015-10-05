@@ -8,20 +8,26 @@
 define([
     'jquery',
     'bluebird',
-    'kb.runtime',
-    'kb.html',
-    'kb.utils',
-    'kb.service.workspace',
+    'underscore',
+    'kb_common_html',
+    'kb_service_workspace',
     'kb_spec_common',
-    'google-code-prettify'],
-    function ($, Promise, R, html, Utils, Workspace, specCommon, PR) {
+    'google-code-prettify',
+    'kb_common_format'],
+    function ($, Promise, _, html, Workspace, specCommon, PR, Format) {
         'use strict';
 
         // Just take params for now
         /* TODO: use specific arguments */
-        var factory = function () {
-            var mount, container, $container, children = [];
-            var dataType, moduleName, typeName, typeVersion;
+        var factory = function (config) {
+
+            var mount, container, $container, children = [], runtime = config.runtime;
+
+            var workspace = new Workspace(runtime.getConfig('workspace_url', {
+                token: runtime.getService('session').getAuthToken()
+            }));
+
+            var moduleName, moduleVersion;
 
             // tags used in this module.
             var table = html.tag('table'),
@@ -32,11 +38,8 @@ define([
                 div = html.tag('div'),
                 pre = html.tag('pre'),
                 ul = html.tag('ul'),
-                li = html.tag('li'),
-                bstable = function (cols, rows) {
-                    return html.makeTable({columns: cols, rows: rows, class: 'table'});
-                }
-            
+                li = html.tag('li');
+
             function tabTableContent() {
                 return table({
                     class: 'table table-striped table-bordered',
@@ -46,24 +49,25 @@ define([
 
             // OVERVIEW Tab
             function overviewTab(data) {
+                var username = runtime.getService('session').getUsername(),
+                    isOwner = _.some(data.owners, function (item) {
+                        return (item === username);
+                    });
+
                 return table({class: 'table table-striped table-bordered',
                     style: 'margin-left: auto; margin-right: auto'}, [
-                    tr([th('Name'), td(typeName)]),
-                    tr([th('Version'), td(typeVersion)]),
-                    tr([th('Module version(s)'), td(
-                            bstable(['Version id', 'Created at'], data.module_vers.map(function (moduleVer) {
-                                var moduleId = moduleName + '-' + moduleVer;
-                                return [a({href: '#spec/module/'+moduleId}, moduleVer), 
-                                        Utils.niceTimestamp(parseInt(moduleVer, 10))];
-                            })))]),
+                    tr([th('Name'), td(moduleName)]),
+                    tr([th('Owners'), td(data.owners.join(', '))]),
+                    tr([th('Version'), td(moduleVersion)]),
+                    /* TODO: improve date formatting */
+                    tr([th('Upload time'), td(Format.niceTime(data.ver))]),
                     tr([th('Description'), td(pre({style: {'white-space': 'pre-wrap', 'word-wrap': 'break-word'}}, data.description))])
                 ]);
-                /* TODO: Add back in the kidl editor -- need to talk to Roman */
             }
 
             // SPEC FILE Tab
             function specFileTab(data) {
-                var specText = specCommon.replaceMarkedTypeLinksInSpec(moduleName, data.spec_def, 'links-click');
+                var specText = specCommon.replaceMarkedTypeLinksInSpec(moduleName, data.spec, 'links-click');
                 var content = div({style: {width: '100%'}}, [
                     pre({class: 'prettyprint lang-spec'}, specText)
                 ]);
@@ -80,13 +84,13 @@ define([
             // FUNCTIONS Tab
             function functionsTab(data) {
                 // Build The table more functionally, using datatables.
-                var tableData = data.using_func_defs.map(function (funcId) {
+                var tableData = data.functions.map(function (funcId) {
                     var parsed = funcId.match(/^(.+?)-(.+?)$/),
                         funcName = parsed[1],
                         funcVer = parsed[2];
 
                     return {
-                        name: a({href: '#spec/functions/'+funcId}, funcName),
+                        name: a({href: '#', 'data-action': 'spec-functions', 'data-funcid': funcId}, funcName),
                         ver: funcVer
                     };
                 });
@@ -114,16 +118,17 @@ define([
                 };
             }
 
-            // USING TYPES Tab
-            function usingTypesTab(data) {
-                var tableData = data.using_type_defs.map(function (typeId) {
+            // TYPES Tab
+            function typesTab(data) {
+
+                var tableData = Object.keys(data.types).map(function (typeId) {
                     var parsed = typeId.match(/^(.+?)-(.+?)$/),
-                        typeName = parsed[1],
-                        typeVer = parsed[2];
+                        name = parsed[1],
+                        version = parsed[2];
 
                     return {
-                        name: a({href: '#spec/type/' + typeId}, typeName),
-                        ver: typeVer
+                        name: a({href: '#spec/type/' + typeId}, name),
+                        ver: version
                     };
                 });
                 var tableSettings = {
@@ -136,7 +141,7 @@ define([
                     aaData: tableData,
                     oLanguage: {
                         sSearch: 'Search types:',
-                        sEmptyTable: 'No types use this type'
+                        sEmptyTable: 'No types registered'
                     }
                 };
 
@@ -150,29 +155,28 @@ define([
                 };
             }
 
-            // SUB TYPES Tab
-            function subTypesTab(data) {
-                var tableData = data.used_type_defs.map(function (typeId) {
-                    var parsed = typeId.match(/^(.+?)-(.+?)$/),
-                        typeName = parsed[1],
-                        typeVer = parsed[2];
+            // INCLUDED MODULES Tab
+            function includedModulesTab(data) {
 
+                var tableData = Object.keys(data.included_spec_version).map(function (name) {
+                    var version = data.included_spec_version[name],
+                        id = name + '-' + version;
                     return {
-                        name: a({href: '#spec/type/'+typeId}, typeName),
-                        ver: typeVer
+                        name: a({href: '#spec/module/' + id}, name),
+                        ver: version
                     };
                 });
                 var tableSettings = {
                     sPaginationType: 'full_numbers',
                     iDisplayLength: 10,
                     aoColumns: [
-                        {sTitle: 'Type name', mData: 'name'},
-                        {sTitle: 'Type version', mData: 'ver'}
+                        {sTitle: 'Module name', mData: 'name'},
+                        {sTitle: 'Module version', mData: 'ver'}
                     ],
                     aaData: tableData,
                     oLanguage: {
-                        sSearch: 'Search types:',
-                        sEmptyTable: 'No types use this type'
+                        sSearch: 'Search module:',
+                        sEmptyTable: 'No included modules used.'
                     }
                 };
                 return {
@@ -187,58 +191,76 @@ define([
 
             // VERSIONS Tab
             function versionsTab(data) {
-                var tableData = data.type_vers.map(function (typeId) {
-                    var parsed = typeId.match(/^(.+?)-(.+?)$/),
-                        typeName = parsed[1],
-                        typeVer = parsed[2];
-
-                    return {
-                        name: a({href: '#spec/type/'+typeId}, typeName),
-                        ver: typeVer
-                    };
-                });
-                var tableSettings = {
-                    sPaginationType: 'full_numbers',
-                    iDisplayLength: 10,
-                    aoColumns: [
-                        {sTitle: 'Type name', mData: 'name'},
-                        {sTitle: 'Type version', mData: 'ver'}
-                    ],
-                    aaData: tableData,
-                    oLanguage: {
-                        sSearch: 'Search versions:',
-                        sEmptyTable: 'No versions registered'
-                    }
-                };
                 return {
                     content: tabTableContent(),
                     widget: {
                         attach: function (node) {
-                            $(node).find('[data-attach="table"]').dataTable(tableSettings);
+                            Promise.resolve(workspace.list_module_versions({mod: moduleName}))
+                                .then(function (data) {
+                                    var tableData = data.vers.map(function (version) {
+                                        if (version === moduleVersion) {
+                                            return {
+                                                name: '' + version + ' (current)',
+                                                date: version
+                                            };
+                                        } else {
+                                            return {
+                                                name: a({href: '#spec/module/' + moduleName + '-' + version}, version),
+                                                date: version
+                                            };
+                                        }
+                                    });
+                                    var tableSettings = {
+                                        sPaginationType: 'full_numbers',
+                                        iDisplayLength: 10,
+                                        aoColumns: [
+                                            {sTitle: 'Module version', mData: 'name'},
+                                            {sTitle: 'Upload date', mData: function (row, type) {
+                                                    switch (type) {
+                                                        case 'display':
+                                                            return Format.niceTime(row.date);
+                                                            break;
+                                                        default:
+                                                            return row.date;
+                                                        }
+                                                }}
+                                        ],
+                                        aaData: tableData,
+                                        oLanguage: {
+                                            sSearch: 'Search versions:',
+                                            sEmptyTable: 'No versions registered.'
+                                        }
+                                    };
+
+                                    $(node).find('[data-attach="table"]').dataTable(tableSettings);
+                                })
+                                .catch(function (err) {
+                                    console.log('ERROR');
+                                    console.log(err);
+
+                                })
+                                .done();
                         }
                     }
                 };
             }
 
             function render() {
-                var workspace = new Workspace(R.getConfig('workspace_url', {
-                    token: R.getAuthToken()
-                }));
+                return new Promise(function (resolve, reject) {
+                    Promise.resolve(workspace.get_module_info({mod: moduleName, ver: moduleVersion}))
+                        .then(function (data) {
+                            var tabs = [
+                                {title: 'Overview', id: 'overview', content: overviewTab},
+                                {title: 'Spec-file', id: 'spec', content: specFileTab},
+                                {title: 'Types', id: 'types', content: typesTab},
+                                {title: 'Functions', id: 'funcs', content: functionsTab},
+                                {title: 'Included modules', id: 'inc', content: includedModulesTab},
+                                {title: 'Versions', id: 'vers', content: versionsTab}
+                            ],
+                                id = '_' + html.genId(),
+                                widgets = [];
 
-                Promise.resolve(workspace.get_type_info(dataType))
-                    .then(function (data) {
-                        var tabs = [
-                            {title: 'Overview', id: 'overview', content: overviewTab},
-                            {title: 'Spec-file', id: 'spec', content: specFileTab},
-                            {title: 'Functions', id: 'funcs', content: functionsTab},
-                            {title: 'Using Types', id: 'types', content: usingTypesTab},
-                            {title: 'Sub-types', id: 'subs', content: subTypesTab},
-                            {title: 'Versions', id: 'vers', content: versionsTab}
-                        ],
-                            id = '_' + html.genId(),
-                            widgets = [];
-
-                        var content = div([
+                            var content = div([
                                 ul({id: id, class: 'nav nav-tabs'},
                                     tabs.map(function (tab) {
                                         var active = (tab.id === 'overview') ? 'active' : '';
@@ -266,30 +288,31 @@ define([
                                 })
                                     )
                             ]);
-                        $container.html(content);
-                        widgets.forEach(function (widget) {
-                            widget.widget.attach($('#' + widget.id));
-                        });
-                        PR.prettyPrint();
-                    })
-                    .catch(function (err) {
-                        var error = 'Error rendering widget';
-                        console.log(err);
-                        $container.html(error);
-                    })
-                    .done();
+                            $container.html(content);
+                            widgets.forEach(function (widget) {
+                                widget.widget.attach($('#' + widget.id));
+                            });
+                            PR.prettyPrint();
+                            resolve();
+                        })
+                        .catch(function (err) {
+                            reject(err);
+                            //var error = 'Error rendering widget';
+                            //console.log(err);
+                            //container.html(error);
+                        })
+                        .done();
+                });
             }
-            
+
             // API
-            
-            var mount, container, $container, children = [];
             
             function create() {
                 return new Promise(function (resolve) {
                     resolve();
                 });
             }
-
+            
             function attach(node) {
                 return new Promise(function (resolve) {
                     mount = node;
@@ -299,37 +322,39 @@ define([
                     resolve();
                 });
             }
-            
             function detach() {
                 return new Promise(function (resolve) {
-                    $container.empty();
+                    container.empty();
                     resolve();
                 });
             }
 
             function start(params) {
-                return new Promise(function (resolve) {
+                return new Promise(function (resolve, reject) {
                     $container.html(html.loading());
-                
+
                     // Parse the data type, throwing exceptions if malformed.
-                    dataType = params.datatype;
-                    var matched = dataType.match(/^(.+?)\.(.+?)-(.+)$/);
+                    var moduleId = params.moduleid;
+                    var matched = moduleId.match(/^(.+?)-(.+)$/);
                     if (!matched) {
-                        throw new Error('Invalid data type ' + dataType);
+                        throw new Error('Invalid module id ' + moduleId);
                     }
-                    if (matched.length !== 4) {
-                        throw new Error('Invalid data type ' + dataType);
+                    if (matched.length !== 3) {
+                        throw new Error('Invalid module id ' + moduleId);
                     }
 
                     moduleName = matched[1];
-                    typeName = matched[1] + '.' + matched[2];
-                    typeVersion = matched[3];
+                    moduleVersion = matched[2];
 
-                    /* TODO: reign this puppy in... */
-                    // This is a promise that isn't returned ... so it just goes off by itself.
-                    render();
-                    
-                    resolve();
+                    render()
+                        .then(function () {
+                            resolve();
+                        })
+                        .catch(function (err) {
+                            reject(err);
+                        })
+                        .done();
+
                 });
             }
 
@@ -349,8 +374,8 @@ define([
         };
 
         return {
-            create: function () {
-                return factory();
+            create: function (config) {
+                return factory(config);
             }
         };
     });

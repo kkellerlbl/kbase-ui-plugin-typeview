@@ -7,12 +7,11 @@
  */
 define([
     'bluebird',
-    'kb.runtime',
-    'kb.html',
+    'kb_common_html',
     'kb_widgetCollection', 
     'kb_widget_moduleSpecification'
 ],
-    function (Promise, R, html, WidgetCollection, ModuleSpecWidget) {
+    function (Promise, html, WidgetCollection, ModuleSpecWidget) {
         'use strict';
         function renderModulePanel(params) {
             return new Promise(function (resolve) {
@@ -44,7 +43,7 @@ define([
         }
 
         function widget(config) {
-            var mount, container, $container, children = [];
+            var mount, container, children = [], runtime = config.runtime;
             function init(config) {
                 return new Promise(function (resolve) {
                     resolve();
@@ -55,7 +54,6 @@ define([
                     mount = node;
                     container = document.createElement('div');
                     mount.appendChild(container);
-                    $container = $(container);
                     resolve();
                 });
             }
@@ -64,7 +62,7 @@ define([
                     renderModulePanel(params)
                         .then(function (rendered) {
                             container.innerHTML = rendered.content;
-                            R.send('app', 'title', 'Loading: ' + rendered.title);
+                            runtime.send('ui', 'setTitle', 'Loading: ' + rendered.title);
                             // create widgets.
                             children = rendered.widgets;
                             Promise.all(children.map(function (w) {
@@ -79,7 +77,7 @@ define([
                                                 return w.widget.start(params);
                                             }))
                                                 .then(function (results) {
-                                                    R.send('app', 'title', rendered.title);
+                                                    runtime.send('ui', 'setTitle', rendered.title);
                                                     resolve();
                                                 })
                                                 .catch(function (err) {
