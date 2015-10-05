@@ -275,8 +275,7 @@ define([
                         var error = 'Error rendering widget';
                         console.log(err);
                         $container.html(error);
-                    })
-                    .done();
+                    });
             }
             
             // API
@@ -348,7 +347,7 @@ define([
         };
 
         return {
-            create: function (config) {
+            make: function (config) {
                 return factory(config);
             }
         };

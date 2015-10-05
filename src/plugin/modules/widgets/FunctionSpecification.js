@@ -283,7 +283,7 @@ define([
         };
 
         return {
-            create: function (config) {
+            make: function (config) {
                 return factory(config);
             }
         };
