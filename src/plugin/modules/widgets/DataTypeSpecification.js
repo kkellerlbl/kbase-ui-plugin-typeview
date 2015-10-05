@@ -19,8 +19,10 @@ define([
         // Just take params for now
         /* TODO: use specific arguments */
         var factory = function (config) {
-            var mount, container, $container, children = [], runtime = config.runtime;
+            var mount, container, $container, runtime = config.runtime;
             var dataType, moduleName, typeName, typeVersion;
+
+            console.log('creating data type spec widget..');
 
             // tags used in this module.
             var table = html.tag('table'),
@@ -34,7 +36,7 @@ define([
                 li = html.tag('li'),
                 bstable = function (cols, rows) {
                     return html.makeTable({columns: cols, rows: rows, class: 'table'});
-                }
+                };
             
             function tabTableContent() {
                 return table({
@@ -220,7 +222,7 @@ define([
             }
 
             function render() {
-                var workspace = new Workspace(R.getConfig('workspace_url', {
+                var workspace = new Workspace(runtime.getConfig('workspace_url', {
                     token: runtime.getService('session').getAuthToken()
                 }));
 
@@ -280,7 +282,7 @@ define([
             
             // API
             
-            var mount, container, $container, children = [];
+            var mount, container, $container;
             
             function create() {
                 return new Promise(function (resolve) {

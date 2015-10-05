@@ -42,7 +42,7 @@ define([
 //        }
 
         function widget(config) {
-            var mount, container, children = [], 
+            var mount, container, 
                 runtime = config.runtime,  
                 widgetSet = widgetSetFactory.make({
                     runtime: runtime
