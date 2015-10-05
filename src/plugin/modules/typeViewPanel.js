@@ -54,7 +54,7 @@ define([
                     div({class: 'row'}, [
                         div({class: 'col-sm-12'}, [
                             //div({id: addJQWidget('cardlayoutmanager', 'KBaseCardLayoutManager')}),
-                            div({id: widgetSet.addWiget('kb_typeview_dataTypeSpec')})
+                            div({id: widgetSet.addWidget('kb_typeview_dataTypeSpec')})
                         ])
                     ])
                 ]);
