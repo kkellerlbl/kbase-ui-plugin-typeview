@@ -48,6 +48,8 @@ define([
                     mount = node;
                     container = document.createElement('div');
                     mount.appendChild(container);
+                    // There, NOW the widget notes are instantiated.
+                    container.innerHTML = content;
                     return widgetSet.attach(node);
                 });
             }
