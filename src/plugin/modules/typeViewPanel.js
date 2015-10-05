@@ -96,7 +96,6 @@ define([
             }
 
             return {
-                init: init,
                 attach: attach,
                 start: start,
                 stop: stop,
