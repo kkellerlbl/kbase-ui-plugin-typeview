@@ -69,11 +69,6 @@ define([
             
             // API
 
-            function init(config) {
-                return Promise.try(function () {
-                    return widgetSet.init();
-                })
-            }
             function attach(node) {
                 return Promise.try(function () {
                     mount = node;
