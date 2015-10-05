@@ -42,14 +42,14 @@ define([
 //        }
 
         function widget(config) {
-            var mount, container, 
-                runtime = config.runtime,  
+            var mount, container,
+                runtime = config.runtime,
                 widgetSet = widgetSetFactory.make({
                     runtime: runtime
                 }),
                 content;
-            
-             function renderTypePanel() {
+
+            function renderTypePanel() {
                 var div = html.tag('div');
                 return div({class: 'kbase-view kbase-spec-view container-fluid', dataKbaseView: 'spec'}, [
                     div({class: 'row'}, [
@@ -60,12 +60,14 @@ define([
                     ])
                 ]);
             }
-            
-            
+
+
             // API
             function init(config) {
                 return Promise.try(function () {
                     content = renderTypePanel();
+                    console.log('rendered?');
+                    console.log(content);
                     return widgetSet.init(config);
                 });
             }
