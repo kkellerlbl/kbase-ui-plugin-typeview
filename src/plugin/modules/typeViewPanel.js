@@ -65,8 +65,8 @@ define([
             // API
             function init(config) {
                 return Promise.try(function () {
-                    content = renderTypePanel();
                     console.log('rendered?');
+                    content = renderTypePanel();
                     console.log(content);
                     return widgetSet.init(config);
                 });

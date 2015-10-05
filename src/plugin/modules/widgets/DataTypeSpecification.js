@@ -12,7 +12,8 @@ define([
     'kb_common_utils',
     'kb_service_workspace',
     'kb_spec_common',
-    'google-code-prettify'],
+    'google-code-prettify',
+     'datatables_bootstrap'],
     function ($, Promise, html, Utils, Workspace, specCommon, PR) {
         'use strict';
 
