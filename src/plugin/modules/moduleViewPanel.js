@@ -16,7 +16,9 @@ define([
 
         function widget(config) {
             var mount, container, children = [], runtime = config.runtime,
-                widgetSet = widgetSetFactory.make(), content;
+                widgetSet = widgetSetFactory.make({
+                    runtime: runtime
+                }), content;
             
             
              function renderModulePanel(params) {
