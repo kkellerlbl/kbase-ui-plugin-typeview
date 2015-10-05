@@ -43,6 +43,7 @@ install:
         -
             module: kb_panel_typeView
             id: kb_typeview_typeViewPanel
+            type: factory
         #-
         #    module: kb_panel_moduleView
         #    id: kb_typeview_moduleViewPanel
@@ -52,6 +53,7 @@ install:
         -
             module: kb_widget_dataTypeSpecification
             id: kb_typeview_dataTypeSpec
+            type: factory
         #-
         #    module: kb_widget_moduleSpecification
         #    id: kb_typeview_moduleSpec
