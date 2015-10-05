@@ -30,7 +30,7 @@ define([
                             //div({id: widgets.addFactoryWidget('datatypespec', ModuleSpecWidget, {
                             //    moduleid: params.moduleid
                             //    })})
-                            div({id: widgetSet.addWidget('kb_typeview_dataTypeSpec')})
+                            div({id: widgetSet.addWidget('kb_typeview_moduleSpec')})
                         ])
                     ])
                 ]);
@@ -50,7 +50,7 @@ define([
                     mount.appendChild(container);
                     // There, NOW the widget notes are instantiated.
                     container.innerHTML = content;
-                    return widgetSet.attach(node);
+                    return widgetSet.attach(container);
                 });
             }
             function start(params) {
