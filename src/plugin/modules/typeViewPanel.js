@@ -10,7 +10,7 @@ define([
     'kb_common_html',
     'kb_common_widgetSet'
 ],
-    function (Promise, html, widgetSet) {
+    function (Promise, html, widgetSetFactory) {
         'use strict';
 
 //        function renderTypePanel(params) {
@@ -44,7 +44,7 @@ define([
         function widget(config) {
             var mount, container, children = [], 
                 runtime = config.runtime,  
-                widgetSet = widgetSet.make({
+                widgetSet = widgetSetFactory.make({
                     runtime: runtime
                 });
             
@@ -62,7 +62,11 @@ define([
             
             
             // API
-
+            function init(config) {
+                return Promise.try(function () {
+                    return widgetSet.init(config);
+                });
+            }
             function attach(node) {
                 return Promise.try(function () {
                     mount = node;
@@ -88,12 +92,19 @@ define([
                     return widgetSet.detach();
                 });
             }
+            function destroy() {
+                return Promise.try(function () {
+                    return widgetSet.destroy();
+                });
+            }
 
             return {
+                init: init,
                 attach: attach,
                 start: start,
                 stop: stop,
-                detach: detach
+                detach: detach,
+                destroy: destroy
             };
         }
 
