@@ -9,11 +9,11 @@ define([
     'jquery',
     'bluebird',
     'underscore',
-    'kb_common_html',
+    'kb/common/html',
     'kb_service_workspace',
     'kb_spec_common',
     'google-code-prettify',
-    'kb_common_format',
+    'kb/common/format',
     'datatables_bootstrap'],
     function ($, Promise, _, html, Workspace, specCommon, PR, Format) {
         'use strict';

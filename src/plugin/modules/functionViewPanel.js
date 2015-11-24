@@ -7,7 +7,7 @@
  */
 define([
     'promise',
-    'kb_common_html',
+    'kb/common/html',
     'kb_widgetCollection', 
     'kb_widget_FunctionSpecification'
 ],
