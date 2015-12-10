@@ -8,7 +8,7 @@
 define([
     'bluebird',
     'kb/common/html',
-    'kb/common/widgetSet'
+    'kb/widget/widgetSet'
 ],
     function (Promise, html, widgetSetFactory) {
         'use strict';
