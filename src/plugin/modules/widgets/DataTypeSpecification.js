@@ -10,10 +10,10 @@ define([
     'bluebird',
     'kb/common/html',
     'kb/common/utils',
-    'kb_service_workspace',
+    'kb/service/client/workspace',
     'kb_spec_common',
     'google-code-prettify',
-     'datatables_bootstrap'],
+    'datatables_bootstrap'],
     function ($, Promise, html, Utils, Workspace, specCommon, PR) {
         'use strict';
 

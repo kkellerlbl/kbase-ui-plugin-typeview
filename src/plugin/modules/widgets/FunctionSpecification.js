@@ -10,7 +10,7 @@ define([
     'bluebird',
     'underscore',
     'kb/common/html',
-    'kb_service_workspace',
+    'kb/service/workspace',
     'kb_spec_common',
     'google-code-prettify',
     'kb/common/format'],
