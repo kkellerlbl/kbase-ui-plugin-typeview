@@ -38,13 +38,13 @@ define([
             
             
             function init(config) {
-                Promise.try(function () {
+                return Promise.try(function () {
                     content = renderModulePanel();
                     return widgetSet.init(config);
                 });
             }
             function attach(node) {
-               Promise.try(function () {
+               return Promise.try(function () {
                     mount = node;
                     container = document.createElement('div');
                     mount.appendChild(container);

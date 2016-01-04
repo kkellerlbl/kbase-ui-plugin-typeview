@@ -20,10 +20,8 @@ define([
         // Just take params for now
         /* TODO: use specific arguments */
         var factory = function (config) {
-            var mount, container, $container, runtime = config.runtime;
+            var mount, container, runtime = config.runtime;
             var dataType, moduleName, typeName, typeVersion;
-
-            console.log('creating data type spec widget..');
 
             // tags used in this module.
             var table = html.tag('table'),
@@ -38,7 +36,7 @@ define([
                 bstable = function (cols, rows) {
                     return html.makeTable({columns: cols, rows: rows, class: 'table'});
                 };
-            
+
             function tabTableContent() {
                 return table({
                     class: 'table table-striped table-bordered',
@@ -55,8 +53,8 @@ define([
                     tr([th('Module version(s)'), td(
                             bstable(['Version id', 'Created at'], data.module_vers.map(function (moduleVer) {
                                 var moduleId = moduleName + '-' + moduleVer;
-                                return [a({href: '#spec/module/'+moduleId}, moduleVer), 
-                                        Utils.niceTimestamp(parseInt(moduleVer, 10))];
+                                return [a({href: '#spec/module/' + moduleId}, moduleVer),
+                                    Utils.niceTimestamp(parseInt(moduleVer, 10))];
                             })))]),
                     tr([th('Description'), td(pre({style: {'white-space': 'pre-wrap', 'word-wrap': 'break-word'}}, data.description))])
                 ]);
@@ -73,7 +71,7 @@ define([
                     content: content,
                     widget: {
                         attach: function (node) {
-                            PR.prettyPrint(null, node.get(0));
+                            PR.prettyPrint(null, node);
                         }
                     }
                 };
@@ -88,7 +86,7 @@ define([
                         funcVer = parsed[2];
 
                     return {
-                        name: a({href: '#spec/functions/'+funcId}, funcName),
+                        name: a({href: '#spec/functions/' + funcId}, funcName),
                         ver: funcVer
                     };
                 });
@@ -110,7 +108,10 @@ define([
                     content: tabTableContent(),
                     widget: {
                         attach: function (node) {
-                            $(node).find('[data-attach="table"]').dataTable(tableSettings);
+                            var n = node.querySelector('[data-attach="table"]');
+                            if (n !== null) {
+                                $(n).dataTable(tableSettings);
+                            }
                         }
                     }
                 };
@@ -146,7 +147,10 @@ define([
                     content: tabTableContent(),
                     widget: {
                         attach: function (node) {
-                            $(node).find('[data-attach="table"]').dataTable(tableSettings);
+                            var n = node.querySelector('[data-attach="table"]');
+                            if (n !== null) {
+                                $(n).dataTable(tableSettings);
+                            }
                         }
                     }
                 };
@@ -160,7 +164,7 @@ define([
                         typeVer = parsed[2];
 
                     return {
-                        name: a({href: '#spec/type/'+typeId}, typeName),
+                        name: a({href: '#spec/type/' + typeId}, typeName),
                         ver: typeVer
                     };
                 });
@@ -181,7 +185,10 @@ define([
                     content: tabTableContent(),
                     widget: {
                         attach: function (node) {
-                            $(node).find('[data-attach="table"]').dataTable(tableSettings);
+                            var n = node.querySelector('[data-attach="table"]');
+                            if (n !== null) {
+                                $(n).dataTable(tableSettings);
+                            }
                         }
                     }
                 };
@@ -195,7 +202,7 @@ define([
                         typeVer = parsed[2];
 
                     return {
-                        name: a({href: '#spec/type/'+typeId}, typeName),
+                        name: a({href: '#spec/type/' + typeId}, typeName),
                         ver: typeVer
                     };
                 });
@@ -216,7 +223,10 @@ define([
                     content: tabTableContent(),
                     widget: {
                         attach: function (node) {
-                            $(node).find('[data-attach="table"]').dataTable(tableSettings);
+                            var n = node.querySelector('[data-attach="table"]');
+                            if (n !== null) {
+                                $(n).dataTable(tableSettings);
+                            }
                         }
                     }
                 };
@@ -227,7 +237,7 @@ define([
                     token: runtime.getService('session').getAuthToken()
                 }));
 
-                Promise.resolve(workspace.get_type_info(dataType))
+                return workspace.get_type_info(dataType)
                     .then(function (data) {
                         var tabs = [
                             {title: 'Overview', id: 'overview', content: overviewTab},
@@ -241,77 +251,70 @@ define([
                             widgets = [];
 
                         var content = div([
-                                ul({id: id, class: 'nav nav-tabs'},
-                                    tabs.map(function (tab) {
-                                        var active = (tab.id === 'overview') ? 'active' : '';
-                                        return li({class: active}, a({href: '#' + tab.id + id, 'data-toggle': 'tab'}, tab.title));
-                                    })),
-                                div({class: 'tab-content'}, tabs.map(function (tab) {
-                                    var active = (tab.id === 'overview') ? ' active' : '',
-                                        result = tab.content(data);
-                                    if (typeof result === 'string') {
-                                        return div({class: 'tab-pane in' + active, id: tab.id + id}, tab.content(data));
-                                    }
-                                    // This is the emerging widget pattern: Save a list of widgets 
-                                    // and invoke them after the content is added to the dom,
-                                    // because they need a real node to render upon.
-                                    var widgetId = html.genId();
-                                    widgets.push({
-                                        id: widgetId,
-                                        widget: result.widget
-                                    });
-                                    return div({class: 'tab-pane in' + active, id: tab.id + id}, [
-                                        div({id: widgetId}, [
-                                            result.content
-                                        ])
-                                    ]);
-                                })
-                                    )
-                            ]);
-                        $container.html(content);
-                        widgets.forEach(function (widget) {
-                            widget.widget.attach($('#' + widget.id));
-                        });
-                        PR.prettyPrint();
+                            ul({id: id, class: 'nav nav-tabs'},
+                                tabs.map(function (tab) {
+                                    var active = (tab.id === 'overview') ? 'active' : '';
+                                    return li({class: active}, a({href: '#' + tab.id + id, 'data-toggle': 'tab'}, tab.title));
+                                })),
+                            div({class: 'tab-content'}, tabs.map(function (tab) {
+                                var active = (tab.id === 'overview') ? ' active' : '',
+                                    result = tab.content(data);
+                                if (typeof result === 'string') {
+                                    return div({class: 'tab-pane in' + active, id: tab.id + id}, tab.content(data));
+                                }
+                                // This is the emerging widget pattern: Save a list of widgets 
+                                // and invoke them after the content is added to the dom,
+                                // because they need a real node to render upon.
+                                var widgetId = html.genId();
+                                widgets.push({
+                                    id: widgetId,
+                                    widget: result.widget
+                                });
+                                return div({class: 'tab-pane in' + active, id: tab.id + id}, [
+                                    div({id: widgetId}, [
+                                        result.content
+                                    ])
+                                ]);
+                            })
+                                )
+                        ]);
+                        container.innerHTML = content;
+                        return Promise.all(widgets.map(function (widget) {
+                            var n = document.getElementById(widget.id);
+                            return widget.widget.attach(n);
+                        }));
+
                     })
-                    .catch(function (err) {
-                        var error = 'Error rendering widget';
-                        console.log(err);
-                        $container.html(error);
+                    .then(function () {
+                        PR.prettyPrint();
                     });
             }
-            
+
             // API
-            
-            var mount, container, $container;
-            
-            function create() {
-                return new Promise(function (resolve) {
-                    resolve();
-                });
-            }
+
+            var mount, container;
 
             function attach(node) {
-                return new Promise(function (resolve) {
+                return Promise.try(function () {
                     mount = node;
                     container = document.createElement('div');
                     mount.appendChild(container);
-                    $container = $(container);
-                    resolve();
                 });
             }
-            
+
             function detach() {
-                return new Promise(function (resolve) {
-                    $container.empty();
-                    resolve();
+                return Promise.try(function () {
+                    if (mount && container) {
+                        mount.removeChild(container);
+                        container.innerHTML = '';
+                    }
                 });
             }
 
             function start(params) {
-                return new Promise(function (resolve) {
-                    $container.html(html.loading());
-                
+                return Promise.try(function () {
+                    container.innerHTML = html.loading();
+
                     // Parse the data type, throwing exceptions if malformed.
                     dataType = params.datatype;
                     var matched = dataType.match(/^(.+?)\.(.+?)-(.+)$/);
@@ -328,24 +331,14 @@ define([
 
                     /* TODO: reign this puppy in... */
                     // This is a promise that isn't returned ... so it just goes off by itself.
-                    render();
-                    
-                    resolve();
-                });
-            }
-
-            function stop() {
-                return new Promise(function (resolve) {
-                    resolve();
+                    return render();
                 });
             }
 
             return {
-                create: create,
                 attach: attach,
                 detach: detach,
-                start: start,
-                stop: stop
+                start: start
             };
         };
 

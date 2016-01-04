@@ -1,8 +1,0 @@
-{
-    "name": "kbase-ui-plugin-typeview",
-    "version": "0.0.1",
-    "keywords": ["kbase", "plugin"],
-    "author": "Erik Pears",
-    "contributors": [],
-    "dependencies": {}
-}

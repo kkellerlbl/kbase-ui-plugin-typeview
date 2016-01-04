@@ -10,7 +10,7 @@ define([
     'bluebird',
     'underscore',
     'kb/common/html',
-    'kb/service/workspace',
+    'kb/service/client/workspace',
     'kb_spec_common',
     'google-code-prettify',
     'kb/common/format',
@@ -22,7 +22,7 @@ define([
         /* TODO: use specific arguments */
         var factory = function (config) {
 
-            var mount, container, $container, runtime = config.runtime;
+            var mount, container, runtime = config.runtime;
 
             var workspace = new Workspace(runtime.getConfig('workspace_url', {
                 token: runtime.getService('session').getAuthToken()
@@ -191,12 +191,16 @@ define([
             }
 
             // VERSIONS Tab
+
+            // Look, a little mini widget.
+            // Can we integrate this with the widgetManager, or perhaps we just 
+            // don't need to fuss.
             function versionsTab(data) {
                 return {
                     content: tabTableContent(),
                     widget: {
                         attach: function (node) {
-                            Promise.resolve(workspace.list_module_versions({mod: moduleName}))
+                            return workspace.list_module_versions({mod: moduleName})
                                 .then(function (data) {
                                     var tableData = data.vers.map(function (version) {
                                         if (version === moduleVersion) {
@@ -223,7 +227,7 @@ define([
                                                             break;
                                                         default:
                                                             return row.date;
-                                                        }
+                                                    }
                                                 }}
                                         ],
                                         aaData: tableData,
@@ -234,105 +238,87 @@ define([
                                     };
 
                                     $(node).find('[data-attach="table"]').dataTable(tableSettings);
-                                })
-                                .catch(function (err) {
-                                    console.log('ERROR');
-                                    console.log(err);
-
-                                })
-                                .done();
+                                });
                         }
                     }
                 };
             }
 
             function render() {
-                return new Promise(function (resolve, reject) {
-                    Promise.resolve(workspace.get_module_info({mod: moduleName, ver: moduleVersion}))
-                        .then(function (data) {
-                            var tabs = [
-                                {title: 'Overview', id: 'overview', content: overviewTab},
-                                {title: 'Spec-file', id: 'spec', content: specFileTab},
-                                {title: 'Types', id: 'types', content: typesTab},
-                                {title: 'Functions', id: 'funcs', content: functionsTab},
-                                {title: 'Included modules', id: 'inc', content: includedModulesTab},
-                                {title: 'Versions', id: 'vers', content: versionsTab}
-                            ],
-                                id = '_' + html.genId(),
-                                widgets = [];
+                return workspace.get_module_info({mod: moduleName, ver: moduleVersion})
+                    .then(function (data) {
+                        var tabs = [
+                            {title: 'Overview', id: 'overview', content: overviewTab},
+                            {title: 'Spec-file', id: 'spec', content: specFileTab},
+                            {title: 'Types', id: 'types', content: typesTab},
+                            {title: 'Functions', id: 'funcs', content: functionsTab},
+                            {title: 'Included modules', id: 'inc', content: includedModulesTab},
+                            {title: 'Versions', id: 'vers', content: versionsTab}
+                        ],
+                            id = '_' + html.genId(),
+                            widgets = [];
 
-                            var content = div([
-                                ul({id: id, class: 'nav nav-tabs'},
-                                    tabs.map(function (tab) {
-                                        var active = (tab.id === 'overview') ? 'active' : '';
-                                        return li({class: active}, a({href: '#' + tab.id + id, 'data-toggle': 'tab'}, tab.title));
-                                    })),
-                                div({class: 'tab-content'}, tabs.map(function (tab) {
-                                    var active = (tab.id === 'overview') ? ' active' : '',
-                                        result = tab.content(data);
-                                    if (typeof result === 'string') {
-                                        return div({class: 'tab-pane in' + active, id: tab.id + id}, tab.content(data));
-                                    }
-                                    // This is the emerging widget pattern: Save a list of widgets 
-                                    // and invoke them after the content is added to the dom,
-                                    // because they need a real node to render upon.
-                                    var widgetId = html.genId();
-                                    widgets.push({
-                                        id: widgetId,
-                                        widget: result.widget
-                                    });
-                                    return div({class: 'tab-pane in' + active, id: tab.id + id}, [
-                                        div({id: widgetId}, [
-                                            result.content
-                                        ])
-                                    ]);
-                                })
-                                    )
-                            ]);
-                            $container.html(content);
-                            widgets.forEach(function (widget) {
-                                widget.widget.attach($('#' + widget.id));
+                        var content = div([
+                            ul({id: id, class: 'nav nav-tabs'},
+                                tabs.map(function (tab) {
+                                    var active = (tab.id === 'overview') ? 'active' : '';
+                                    return li({class: active}, a({href: '#' + tab.id + id, 'data-toggle': 'tab'}, tab.title));
+                                })),
+                            div({class: 'tab-content'}, tabs.map(function (tab) {
+                                var active = (tab.id === 'overview') ? ' active' : '',
+                                    result = tab.content(data);
+                                if (typeof result === 'string') {
+                                    return div({class: 'tab-pane in' + active, id: tab.id + id}, tab.content(data));
+                                }
+                                // This is the emerging widget pattern: Save a list of widgets 
+                                // and invoke them after the content is added to the dom,
+                                // because they need a real node to render upon.
+                                var widgetId = html.genId();
+                                widgets.push({
+                                    id: widgetId,
+                                    widget: result.widget
+                                });
+                                return div({class: 'tab-pane in' + active, id: tab.id + id}, [
+                                    div({id: widgetId}, [
+                                        result.content
+                                    ])
+                                ]);
+                            })
+                                )
+                        ]);
+                        container.innerHTML = content;
+                        return Promise.all(widgets.map(function (widget) {
+                            return Promise.try(function () {
+                                return widget.widget.attach($('#' + widget.id));
                             });
-                            PR.prettyPrint();
-                            resolve();
-                        })
-                        .catch(function (err) {
-                            reject(err);
-                            //var error = 'Error rendering widget';
-                            //console.log(err);
-                            //container.html(error);
-                        })
-                        .done();
-                });
+                        }));
+                    })
+                    .then(function () {
+                        PR.prettyPrint();
+                    });
             }
 
             // API
-            
-            function create() {
-                return new Promise(function (resolve) {
-                    resolve();
-                });
-            }
-            
+
             function attach(node) {
-                return new Promise(function (resolve) {
+                return Promise.try(function () {
                     mount = node;
                     container = document.createElement('div');
                     mount.appendChild(container);
-                    $container = $(container);
-                    resolve();
                 });
             }
             function detach() {
-                return new Promise(function (resolve) {
-                    container.empty();
-                    resolve();
+                return Promise.try(function () {
+                    if (container) {
+                        mount.removeChild(container);
+                        container.innerHTML = '';
+                    }
                 });
             }
 
             function start(params) {
-                return new Promise(function (resolve, reject) {
-                    $container.html(html.loading());
+                return Promise.try(function () {
+                    container.innerHTML = html.loading();
 
                     // Parse the data type, throwing exceptions if malformed.
                     var moduleId = params.moduleid;
@@ -347,30 +333,14 @@ define([
                     moduleName = matched[1];
                     moduleVersion = matched[2];
 
-                    render()
-                        .then(function () {
-                            resolve();
-                        })
-                        .catch(function (err) {
-                            reject(err);
-                        })
-                        .done();
-
-                });
-            }
-
-            function stop() {
-                return new Promise(function (resolve) {
-                    resolve();
+                    return render();
                 });
             }
 
             return {
-                create: create,
                 attach: attach,
                 detach: detach,
-                start: start,
-                stop: stop
+                start: start
             };
         };
 
