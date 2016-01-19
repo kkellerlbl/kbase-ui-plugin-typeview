@@ -2,7 +2,7 @@
 ---
 package:
     author: Erik Pearson
-    name: type_viewer
+    name: typeview
     description: View a type
     date: August 19, 2015
     version: 0.0.1
@@ -36,7 +36,7 @@ source:
         -   
             module: google-code-prettify
         -
-            module: blubird
+            module: bluebird
         
 install:
     widgets:
