@@ -283,8 +283,7 @@ define([
                                         result.content
                                     ])
                                 ]);
-                            })
-                                )
+                            }))
                         ]);
                         container.innerHTML = content;
                         return Promise.all(widgets.map(function (widget) {
