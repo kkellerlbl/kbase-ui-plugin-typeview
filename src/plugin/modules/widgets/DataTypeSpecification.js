@@ -46,12 +46,18 @@ define([
 
             // OVERVIEW Tab
             function overviewTab(data) {
+
+                var typeNameDisplay = typeName;
+                if(typeName.split('-').length!==2) {
+                    // show latest version name
+                    typeNameDisplay = data.released_type_vers[data.released_type_vers.length-1];
+                }
                 return table({class: 'table table-striped table-bordered',
                     style: 'margin-left: auto; margin-right: auto'}, [
-                    tr([th('Name'), td(typeName)]),
-                    tr([th('Version'), td(typeVersion)]),
-                    tr([th('Module version(s)'), td(
-                            bstable(['Version id', 'Created at'], data.module_vers.map(function (moduleVer) {
+                    tr([th('Name'), td(typeNameDisplay)]),
+                    //tr([th('Version'), td(typeVersion)]),
+                    tr([th('In module version(s)'), td(
+                            bstable(['Version id', 'Created on'], data.module_vers.map(function (moduleVer) {
                                 var moduleId = moduleName + '-' + moduleVer;
                                 return [a({href: '#spec/module/' + moduleId}, moduleVer),
                                     Utils.niceTimestamp(parseInt(moduleVer, 10))];
@@ -242,7 +248,8 @@ define([
                         var tabs = [
                             {title: 'Overview', id: 'overview', content: overviewTab},
                             {title: 'Spec-file', id: 'spec', content: specFileTab},
-                            {title: 'Functions', id: 'funcs', content: functionsTab},
+                            /* Functions no longer means anything... */
+                            /*{title: 'Functions', id: 'funcs', content: functionsTab},*/
                             {title: 'Using Types', id: 'types', content: usingTypesTab},
                             {title: 'Sub-types', id: 'subs', content: subTypesTab},
                             {title: 'Versions', id: 'vers', content: versionsTab}
@@ -318,16 +325,22 @@ define([
                     // Parse the data type, throwing exceptions if malformed.
                     dataType = params.datatype;
                     var matched = dataType.match(/^(.+?)\.(.+?)-(.+)$/);
+                    if(matched && matched.length === 4) {
+                        moduleName = matched[1];
+                        typeName = matched[1] + '.' + matched[2];
+                        typeVersion = matched[3];
+                    }
+
+                    matched = dataType.match(/^(.+?)\.(.+?)$/);
+                    if(matched && matched.length === 3) {
+                        moduleName = matched[1];
+                        typeName = matched[1] + '.' + matched[2];
+                        typeVersion = null;
+                    }
+
                     if (!matched) {
                         throw new Error('Invalid data type ' + dataType);
                     }
-                    if (matched.length !== 4) {
-                        throw new Error('Invalid data type ' + dataType);
-                    }
-
-                    moduleName = matched[1];
-                    typeName = matched[1] + '.' + matched[2];
-                    typeVersion = matched[3];
 
                     /* TODO: reign this puppy in... */
                     // This is a promise that isn't returned ... so it just goes off by itself.

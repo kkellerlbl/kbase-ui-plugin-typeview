@@ -59,9 +59,9 @@ define([
                     style: 'margin-left: auto; margin-right: auto'}, [
                     tr([th('Name'), td(moduleName)]),
                     tr([th('Owners'), td(data.owners.join(', '))]),
-                    tr([th('Version'), td(moduleVersion)]),
+                    tr([th('Version'), td(data.ver)]),
                     /* TODO: improve date formatting */
-                    tr([th('Upload time'), td(Format.niceTime(data.ver))]),
+                    tr([th('Created on'), td(Format.niceTime(data.ver))]),
                     tr([th('Description'), td(pre({style: {'white-space': 'pre-wrap', 'word-wrap': 'break-word'}}, data.description))])
                 ]);
             }
@@ -251,7 +251,8 @@ define([
                             {title: 'Overview', id: 'overview', content: overviewTab},
                             {title: 'Spec-file', id: 'spec', content: specFileTab},
                             {title: 'Types', id: 'types', content: typesTab},
-                            {title: 'Functions', id: 'funcs', content: functionsTab},
+                            /* functions no longer mean anything */
+                            /*{title: 'Functions', id: 'funcs', content: functionsTab}, */
                             {title: 'Included modules', id: 'inc', content: includedModulesTab},
                             {title: 'Versions', id: 'vers', content: versionsTab}
                         ],
@@ -322,15 +323,20 @@ define([
                     // Parse the data type, throwing exceptions if malformed.
                     var moduleId = params.moduleid;
                     var matched = moduleId.match(/^(.+?)-(.+)$/);
+                    if(matched && matched.length===3) {
+                        moduleName = matched[1];
+                        moduleVersion = matched[2];
+                    } else {
+                        matched = moduleId.match(/^(.+?)$/);
+                        if(matched && matched.length===2) {
+                            moduleName = matched[1];
+                            moduleVersion = null;
+                        }
+                    }
+
                     if (!matched) {
                         throw new Error('Invalid module id ' + moduleId);
                     }
-                    if (matched.length !== 3) {
-                        throw new Error('Invalid module id ' + moduleId);
-                    }
-
-                    moduleName = matched[1];
-                    moduleVersion = matched[2];
 
                     return render();
                 });
