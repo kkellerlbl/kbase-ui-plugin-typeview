@@ -23,7 +23,7 @@ define([
 
             function renderTypePanel() {
                 var div = html.tag('div');
-                return div({class: 'kbase-view kbase-spec-view container-fluid', dataKbaseView: 'spec'}, [
+                return div({class: 'kbase-view kbase-spec-view container', dataKbaseView: 'spec'}, [
                     div({class: 'row'}, [
                         div({class: 'col-sm-12'}, [
                             //div({id: addJQWidget('cardlayoutmanager', 'KBaseCardLayoutManager')}),
