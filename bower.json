@@ -12,8 +12,8 @@
     ],
     "dependencies": {
         "bluebird": "^3.0.0",
-        "kbase-common-js": "^0.1.0",
-        "kbase-ui-widget": "^0.1.0",
+        "kbase-common-js": "^1.0.0",
+        "kbase-ui-widget": "^1.0.0",
         "google-code-prettify": "^1.0.0",        
         "jquery": "^2.1.0",
         "bootstrap": "^3.3.0",
