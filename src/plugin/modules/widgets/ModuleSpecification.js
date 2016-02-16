@@ -24,28 +24,38 @@ define([
 
             var mount, container, runtime = config.runtime;
 
-            var workspace = new Workspace(runtime.getConfig('workspace_url', {
+            var workspace = new Workspace(runtime.getConfig('services.workspace.url', {
                 token: runtime.getService('session').getAuthToken()
             }));
 
             var moduleName, moduleVersion;
 
             // tags used in this module.
-            var table = html.tag('table'),
-                tr = html.tag('tr'),
-                th = html.tag('th'),
-                td = html.tag('td'),
-                a = html.tag('a'),
-                div = html.tag('div'),
-                pre = html.tag('pre'),
-                ul = html.tag('ul'),
-                li = html.tag('li');
+            var t = html.tag,
+                span = t('span'),
+                table = t('table'),
+                tr = t('tr'),
+                th = t('th'),
+                td = t('td'),
+                a = t('a'),
+                div = t('div'),
+                pre = t('pre'),
+                ul = t('ul'),
+                li = t('li');
 
             function tabTableContent() {
                 return table({
                     class: 'table table-striped table-bordered',
                     style: {width: '100%'},
                     'data-attach': 'table'});
+            }
+            
+            function renderTitle(name) {
+                var title = [
+                    'Module Specification for',
+                    span({style: {textDecoration: 'underline'}}, name)
+                ].join(' ');
+                runtime.send('ui', 'setTitle', title);
             }
 
             // OVERVIEW Tab
@@ -54,7 +64,7 @@ define([
                     isOwner = _.some(data.owners, function (item) {
                         return (item === username);
                     });
-
+                    
                 return table({class: 'table table-striped table-bordered',
                     style: 'margin-left: auto; margin-right: auto'}, [
                     tr([th('Name'), td(moduleName)]),
@@ -245,6 +255,7 @@ define([
             }
 
             function render() {
+                renderTitle(moduleName);
                 return workspace.get_module_info({mod: moduleName, ver: moduleVersion})
                     .then(function (data) {
                         var tabs = [
