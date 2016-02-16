@@ -24,15 +24,17 @@ define([
             var dataType, moduleName, typeName, typeVersion;
 
             // tags used in this module.
-            var table = html.tag('table'),
-                tr = html.tag('tr'),
-                th = html.tag('th'),
-                td = html.tag('td'),
-                a = html.tag('a'),
-                div = html.tag('div'),
-                pre = html.tag('pre'),
-                ul = html.tag('ul'),
-                li = html.tag('li'),
+            var t = html.tag,
+                table = t('table'),
+                tr = t('tr'),
+                th = t('th'),
+                td = t('td'),
+                a = t('a'),
+                div = t('div'),
+                pre = t('pre'),
+                ul = t('ul'),
+                li = t('li'),
+                span = t('span'),
                 bstable = function (cols, rows) {
                     return html.makeTable({columns: cols, rows: rows, class: 'table'});
                 };
@@ -43,15 +45,23 @@ define([
                     style: {width: '100%'},
                     'data-attach': 'table'});
             }
+            
+            function renderTitle(typeName) {
+                var title = [
+                    'Type Specification for',
+                    span({style: {textDecoration: 'underline'}}, typeName)
+                ].join(' ');
+                runtime.send('ui', 'setTitle', title);
+            }
 
             // OVERVIEW Tab
             function overviewTab(data) {
-
                 var typeNameDisplay = typeName;
                 if(typeName.split('-').length!==2) {
                     // show latest version name
                     typeNameDisplay = data.released_type_vers[data.released_type_vers.length-1];
                 }
+                renderTitle(typeNameDisplay);
                 return table({class: 'table table-striped table-bordered',
                     style: 'margin-left: auto; margin-right: auto'}, [
                     tr([th('Name'), td(typeNameDisplay)]),
@@ -239,7 +249,7 @@ define([
             }
 
             function render() {
-                var workspace = new Workspace(runtime.getConfig('workspace_url', {
+                var workspace = new Workspace(runtime.getConfig('services.workspace.url', {
                     token: runtime.getService('session').getAuthToken()
                 }));
 
