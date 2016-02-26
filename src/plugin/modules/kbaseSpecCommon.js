@@ -54,7 +54,8 @@ define([
                 if (module === curModule) {
                     name = name.substr(name.indexOf('.') + 1);
                 }
-                var link = '<a onclick="specClicks[\'' + aClass + '\'](this,event); return false;" data-typeid="' + id + '">' + name + '</a>';
+                // var link = '<a onclick="specClicks[\'' + aClass + '\'](this,event); return false;" data-typeid="' + id + '">' + name + '</a>';
+                var link = '<a href="#spec/type/' + id + '">' + name + '</a>';
                 specText = specText.substr(0, pos) + link + specText.substr(pos + m.length);
             }
             return specText;
