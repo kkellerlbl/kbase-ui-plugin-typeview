@@ -82,7 +82,7 @@ define([
         function specFileTab(data) {
             var specText = specCommon.replaceMarkedTypeLinksInSpec(moduleName, data.spec_def, 'links-click'),
                 content = div({style: {width: '100%'}}, [
-                    pre({class: 'prettyprint lang-spec'}, specText.replace('<', '&lt;').replace('>', '&gt;'))
+                    pre({class: 'prettyprint lang-spec'}, specText.replace(/</g, '&lt;').replace(/>/g, '&gt;'))
                 ]);
             return {
                 content: content,
