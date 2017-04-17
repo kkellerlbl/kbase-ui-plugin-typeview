@@ -1,37 +1,37 @@
-/*global define*/
-/*jslint browser:true,white:true*/
 define([
     'bluebird',
-    'kb/common/html',
-    'kb/widget/widgetSet'
-], function (Promise, html, widgetSetFactory) {
+    'kb_common/html',
+    'kb_widget/widgetSet'
+], function(Promise, html, widgetSetFactory) {
     'use strict';
 
     function widget(config) {
         var mount, container, runtime = config.runtime,
             widgetSet = widgetSetFactory.make({
                 runtime: runtime
-            }), content;
+            }),
+            content;
 
         function renderModulePanel() {
             var div = html.tag('div');
-            return div({class: 'kbase-view kbase-spec-view container', 'data-kbase-view': 'spec'}, [
-                div({class: 'row'}, [
-                    div({class: 'col-sm-12'}, [
-                        div({id: widgetSet.addWidget('kb_typeview_moduleSpec')})
+            return div({ class: 'kbase-view kbase-spec-view container', 'data-kbase-view': 'spec' }, [
+                div({ class: 'row' }, [
+                    div({ class: 'col-sm-12' }, [
+                        div({ id: widgetSet.addWidget('kb_typeview_moduleSpec') })
                     ])
                 ])
             ]);
         }
 
         function init(config) {
-            return Promise.try(function () {
+            return Promise.try(function() {
                 content = renderModulePanel();
                 return widgetSet.init(config);
             });
         }
+
         function attach(node) {
-            return Promise.try(function () {
+            return Promise.try(function() {
                 mount = node;
                 container = document.createElement('div');
                 mount.appendChild(container);
@@ -40,29 +40,34 @@ define([
                 return widgetSet.attach(container);
             });
         }
+
         function start(params) {
-            return Promise.try(function () {
+            return Promise.try(function() {
                 runtime.send('ui', 'setTitle', 'Module View');
                 return widgetSet.start(params);
             });
         }
+
         function run(params) {
-            return Promise.try(function () {
+            return Promise.try(function() {
                 return widgetSet.run(params);
             });
         }
+
         function stop() {
-            return Promise.try(function () {
+            return Promise.try(function() {
                 return widgetSet.stop();
             });
         }
+
         function detach() {
-            return Promise.try(function () {
+            return Promise.try(function() {
                 return widgetSet.detach();
             });
         }
+
         function destroy() {
-            return Promise.try(function () {
+            return Promise.try(function() {
                 return widgetSet.destroy();
             });
         }
@@ -79,7 +84,7 @@ define([
     }
 
     return {
-        make: function (config) {
+        make: function(config) {
             return widget(config);
         }
     };

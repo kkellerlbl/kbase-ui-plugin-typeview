@@ -1,13 +1,6 @@
-/*global
- define
- */
-/*jslint
- browser: true,
- white: true
- */
 define([
     'google-code-prettify'
-], function (PR) {
+], function(PR) {
     'use strict';
     PR.registerLangHandler(
         PR.createSimpleLexer(
@@ -20,21 +13,21 @@ define([
                  *   http://stackoverflow.com/questions/3039955/jslint-reports-insecure-for-my-regex-what-does-that-mean
                  *   */
                 [PR.PR_STRING, /^(?:"(?:[^\"\\]|\\.)*"|'(?:[^\'\\]|\\.)*')/, null,
-                    '"\'']
-            ],
-            [
+                    '"\''
+                ]
+            ], [
                 [PR.PR_COMMENT, /^(?:\/\*[\s\S]*?(?:\*\/|$))/],
                 [PR.PR_KEYWORD, /^\b(?:module|typedef|funcdef|authentication|returns)\b/, null],
                 // A number is a hex integer literal, a decimal real literal, or in
                 // scientific notation.
                 [PR.PR_LITERAL,
-                    /^\b(?:string|int|float|UnspecifiedObject|list|mapping|structure|tuple)\b/],
+                    /^\b(?:string|int|float|UnspecifiedObject|list|mapping|structure|tuple)\b/
+                ],
                 // An identifier
                 [PR.PR_PLAIN, /^[a-z_][\w-]*/i],
                 // A run of punctuation
                 [PR.PR_PUNCTUATION, /^[^\w\t\n\r \xA0\"\'][^\w\t\n\r \xA0+\-\"\']*/]
-            ]),
-        ['spec']);
+            ]), ['spec']);
 
     /* TODO: replace with grouped matches */
     function replaceMarkedTypeLinksInSpec(curModule, specText, aClass) {
@@ -62,7 +55,7 @@ define([
 
     var lastGeneratedSpecPrefix = 0;
 
-    var generateSpecPrefix = function () {
+    var generateSpecPrefix = function() {
         lastGeneratedSpecPrefix += 1;
         return lastGeneratedSpecPrefix;
     };
