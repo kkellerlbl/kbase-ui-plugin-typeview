@@ -1,26 +1,28 @@
-/*global
- define
- */
-/*jslint
- browser: true,
- white: true
- */
 define([
     'jquery',
     'bluebird',
     'underscore',
-    'kb/common/html',
-    'kb/service/client/workspace',
-    'kb_spec_common',
+    'kb_common/html',
+    'kb_service/client/workspace',
+    '../kbaseSpecCommon',
     'google-code-prettify',
-    'kb/common/format',
+    'kb_common/format',
     'datatables_bootstrap'
-], function ($, Promise, _, html, Workspace, specCommon, PR, Format) {
+], function(
+    $,
+    Promise,
+    _,
+    html,
+    Workspace,
+    specCommon,
+    PR,
+    Format
+) {
     'use strict';
 
     // Just take params for now
     /* TODO: use specific arguments */
-    var factory = function (config) {
+    var factory = function(config) {
 
         var mount, container, runtime = config.runtime;
 
@@ -46,14 +48,15 @@ define([
         function tabTableContent() {
             return table({
                 class: 'table table-striped table-bordered',
-                style: {width: '100%'},
-                'data-attach': 'table'});
+                style: { width: '100%' },
+                'data-attach': 'table'
+            });
         }
 
         function renderTitle(name) {
             var title = [
                 'Module Specification for',
-                span({style: {textDecoration: 'underline'}}, name)
+                span({ style: { textDecoration: 'underline' } }, name)
             ].join(' ');
             runtime.send('ui', 'setTitle', title);
         }
@@ -61,31 +64,33 @@ define([
         // OVERVIEW Tab
         function overviewTab(data) {
             var username = runtime.getService('session').getUsername(),
-                isOwner = _.some(data.owners, function (item) {
+                isOwner = _.some(data.owners, function(item) {
                     return (item === username);
                 });
 
-            return table({class: 'table table-striped table-bordered',
-                style: 'margin-left: auto; margin-right: auto'}, [
+            return table({
+                class: 'table table-striped table-bordered',
+                style: 'margin-left: auto; margin-right: auto'
+            }, [
                 tr([th('Name'), td(moduleName)]),
                 tr([th('Owners'), td(data.owners.join(', '))]),
                 tr([th('Version'), td(data.ver)]),
                 /* TODO: improve date formatting */
                 tr([th('Created on'), td(Format.niceTime(data.ver))]),
-                tr([th('Description'), td(pre({style: {'white-space': 'pre-wrap', 'word-wrap': 'break-word'}}, data.description))])
+                tr([th('Description'), td(pre({ style: { 'white-space': 'pre-wrap', 'word-wrap': 'break-word' } }, data.description))])
             ]);
         }
 
         // SPEC FILE Tab
         function specFileTab(data) {
             var specText = specCommon.replaceMarkedTypeLinksInSpec(moduleName, data.spec, 'links-click');
-            var content = div({style: {width: '100%'}}, [
-                pre({class: 'prettyprint lang-spec'}, specText.replace(/</g, '&lt;').replace(/>/g, '&gt;'))
+            var content = div({ style: { width: '100%' } }, [
+                pre({ class: 'prettyprint lang-spec' }, specText.replace(/</g, '&lt;').replace(/>/g, '&gt;'))
             ]);
             return {
                 content: content,
                 widget: {
-                    attach: function (node) {
+                    attach: function(node) {
                         PR.prettyPrint(null, node.get(0));
                     }
                 }
@@ -95,13 +100,13 @@ define([
         // FUNCTIONS Tab
         function functionsTab(data) {
             // Build The table more functionally, using datatables.
-            var tableData = data.functions.map(function (funcId) {
+            var tableData = data.functions.map(function(funcId) {
                 var parsed = funcId.match(/^(.+?)-(.+?)$/),
                     funcName = parsed[1],
                     funcVer = parsed[2];
 
                 return {
-                    name: a({href: '#', 'data-action': 'spec-functions', 'data-funcid': funcId}, funcName),
+                    name: a({ href: '#', 'data-action': 'spec-functions', 'data-funcid': funcId }, funcName),
                     ver: funcVer
                 };
             });
@@ -109,8 +114,8 @@ define([
                 sPaginationType: 'full_numbers',
                 iDisplayLength: 10,
                 aoColumns: [
-                    {sTitle: 'Function name', mData: 'name'},
-                    {sTitle: 'Function version', mData: 'ver'}
+                    { sTitle: 'Function name', mData: 'name' },
+                    { sTitle: 'Function version', mData: 'ver' }
                 ],
                 aaData: tableData,
                 oLanguage: {
@@ -122,7 +127,7 @@ define([
             return {
                 content: tabTableContent(),
                 widget: {
-                    attach: function (node) {
+                    attach: function(node) {
                         $(node).find('[data-attach="table"]').dataTable(tableSettings);
                     }
                 }
@@ -132,13 +137,13 @@ define([
         // TYPES Tab
         function typesTab(data) {
 
-            var tableData = Object.keys(data.types).map(function (typeId) {
+            var tableData = Object.keys(data.types).map(function(typeId) {
                 var parsed = typeId.match(/^(.+?)-(.+?)$/),
                     name = parsed[1],
                     version = parsed[2];
 
                 return {
-                    name: a({href: '#spec/type/' + typeId}, name),
+                    name: a({ href: '#spec/type/' + typeId }, name),
                     ver: version
                 };
             });
@@ -146,8 +151,8 @@ define([
                 sPaginationType: 'full_numbers',
                 iDisplayLength: 10,
                 aoColumns: [
-                    {sTitle: 'Type name', mData: 'name'},
-                    {sTitle: 'Type version', mData: 'ver'}
+                    { sTitle: 'Type name', mData: 'name' },
+                    { sTitle: 'Type version', mData: 'ver' }
                 ],
                 aaData: tableData,
                 oLanguage: {
@@ -159,7 +164,7 @@ define([
             return {
                 content: tabTableContent(),
                 widget: {
-                    attach: function (node) {
+                    attach: function(node) {
                         $(node).find('[data-attach="table"]').dataTable(tableSettings);
                     }
                 }
@@ -169,11 +174,11 @@ define([
         // INCLUDED MODULES Tab
         function includedModulesTab(data) {
 
-            var tableData = Object.keys(data.included_spec_version).map(function (name) {
+            var tableData = Object.keys(data.included_spec_version).map(function(name) {
                 var version = data.included_spec_version[name],
                     id = name + '-' + version;
                 return {
-                    name: a({href: '#spec/module/' + id}, name),
+                    name: a({ href: '#spec/module/' + id }, name),
                     ver: version
                 };
             });
@@ -181,8 +186,8 @@ define([
                 sPaginationType: 'full_numbers',
                 iDisplayLength: 10,
                 aoColumns: [
-                    {sTitle: 'Module name', mData: 'name'},
-                    {sTitle: 'Module version', mData: 'ver'}
+                    { sTitle: 'Module name', mData: 'name' },
+                    { sTitle: 'Module version', mData: 'ver' }
                 ],
                 aaData: tableData,
                 oLanguage: {
@@ -193,7 +198,7 @@ define([
             return {
                 content: tabTableContent(),
                 widget: {
-                    attach: function (node) {
+                    attach: function(node) {
                         $(node).find('[data-attach="table"]').dataTable(tableSettings);
                     }
                 }
@@ -209,10 +214,10 @@ define([
             return {
                 content: tabTableContent(),
                 widget: {
-                    attach: function (node) {
-                        return workspace.list_module_versions({mod: moduleName})
-                            .then(function (data) {
-                                var tableData = data.vers.map(function (version) {
+                    attach: function(node) {
+                        return workspace.list_module_versions({ mod: moduleName })
+                            .then(function(data) {
+                                var tableData = data.vers.map(function(version) {
                                     if (version === moduleVersion) {
                                         return {
                                             name: '' + version + ' (current)',
@@ -220,7 +225,7 @@ define([
                                         };
                                     } else {
                                         return {
-                                            name: a({href: '#spec/module/' + moduleName + '-' + version}, version),
+                                            name: a({ href: '#spec/module/' + moduleName + '-' + version }, version),
                                             date: version
                                         };
                                     }
@@ -229,8 +234,10 @@ define([
                                     sPaginationType: 'full_numbers',
                                     iDisplayLength: 10,
                                     aoColumns: [
-                                        {sTitle: 'Module version', mData: 'name'},
-                                        {sTitle: 'Upload date', mData: function (row, type) {
+                                        { sTitle: 'Module version', mData: 'name' },
+                                        {
+                                            sTitle: 'Upload date',
+                                            mData: function(row, type) {
                                                 switch (type) {
                                                     case 'display':
                                                         return Format.niceTime(row.date);
@@ -238,7 +245,8 @@ define([
                                                     default:
                                                         return row.date;
                                                 }
-                                            }}
+                                            }
+                                        }
                                     ],
                                     aaData: tableData,
                                     oLanguage: {
@@ -256,31 +264,31 @@ define([
 
         function render() {
             renderTitle(moduleName);
-            return workspace.get_module_info({mod: moduleName, ver: moduleVersion})
-                .then(function (data) {
+            return workspace.get_module_info({ mod: moduleName, ver: moduleVersion })
+                .then(function(data) {
                     var tabs = [
-                        {title: 'Overview', id: 'overview', content: overviewTab},
-                        {title: 'Spec-file', id: 'spec', content: specFileTab},
-                        {title: 'Types', id: 'types', content: typesTab},
-                        /* functions no longer mean anything */
-                        /*{title: 'Functions', id: 'funcs', content: functionsTab}, */
-                        {title: 'Included modules', id: 'inc', content: includedModulesTab},
-                        {title: 'Versions', id: 'vers', content: versionsTab}
-                    ],
+                            { title: 'Overview', id: 'overview', content: overviewTab },
+                            { title: 'Spec-file', id: 'spec', content: specFileTab },
+                            { title: 'Types', id: 'types', content: typesTab },
+                            /* functions no longer mean anything */
+                            /*{title: 'Functions', id: 'funcs', content: functionsTab}, */
+                            { title: 'Included modules', id: 'inc', content: includedModulesTab },
+                            { title: 'Versions', id: 'vers', content: versionsTab }
+                        ],
                         id = '_' + html.genId(),
                         widgets = [];
 
                     var content = div([
-                        ul({id: id, class: 'nav nav-tabs'},
-                            tabs.map(function (tab) {
+                        ul({ id: id, class: 'nav nav-tabs' },
+                            tabs.map(function(tab) {
                                 var active = (tab.id === 'overview') ? 'active' : '';
-                                return li({class: active}, a({href: '#' + tab.id + id, 'data-toggle': 'tab'}, tab.title));
+                                return li({ class: active }, a({ href: '#' + tab.id + id, 'data-toggle': 'tab' }, tab.title));
                             })),
-                        div({class: 'tab-content'}, tabs.map(function (tab) {
+                        div({ class: 'tab-content' }, tabs.map(function(tab) {
                             var active = (tab.id === 'overview') ? ' active' : '',
                                 result = tab.content(data);
                             if (typeof result === 'string') {
-                                return div({class: 'tab-pane in' + active, id: tab.id + id}, tab.content(data));
+                                return div({ class: 'tab-pane in' + active, id: tab.id + id }, tab.content(data));
                             }
                             // This is the emerging widget pattern: Save a list of widgets 
                             // and invoke them after the content is added to the dom,
@@ -290,21 +298,21 @@ define([
                                 id: widgetId,
                                 widget: result.widget
                             });
-                            return div({class: 'tab-pane in' + active, id: tab.id + id}, [
-                                div({id: widgetId}, [
+                            return div({ class: 'tab-pane in' + active, id: tab.id + id }, [
+                                div({ id: widgetId }, [
                                     result.content
                                 ])
                             ]);
                         }))
                     ]);
                     container.innerHTML = content;
-                    return Promise.all(widgets.map(function (widget) {
-                        return Promise.try(function () {
+                    return Promise.all(widgets.map(function(widget) {
+                        return Promise.try(function() {
                             return widget.widget.attach($('#' + widget.id));
                         });
                     }));
                 })
-                .then(function () {
+                .then(function() {
                     PR.prettyPrint();
                 });
         }
@@ -312,14 +320,15 @@ define([
         // API
 
         function attach(node) {
-            return Promise.try(function () {
+            return Promise.try(function() {
                 mount = node;
                 container = document.createElement('div');
                 mount.appendChild(container);
             });
         }
+
         function detach() {
-            return Promise.try(function () {
+            return Promise.try(function() {
                 if (container) {
                     mount.removeChild(container);
                     container.innerHTML = '';
@@ -328,7 +337,7 @@ define([
         }
 
         function start(params) {
-            return Promise.try(function () {
+            return Promise.try(function() {
                 container.innerHTML = html.loading();
 
                 // Parse the data type, throwing exceptions if malformed.
@@ -361,7 +370,7 @@ define([
     };
 
     return {
-        make: function (config) {
+        make: function(config) {
             return factory(config);
         }
     };

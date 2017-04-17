@@ -1,25 +1,26 @@
-/*global
- define
- */
-/*jslint
- browser: true,
- white: true
- */
 define([
     'jquery',
     'bluebird',
-    'kb/common/html',
-    'kb/common/utils',
-    'kb/service/client/workspace',
-    'kb_spec_common',
+    'kb_common/html',
+    'kb_common/utils',
+    'kb_service/client/workspace',
+    '../kbSpecCommon',
     'google-code-prettify',
     'datatables_bootstrap'
-], function ($, Promise, html, Utils, Workspace, specCommon, PR) {
+], function(
+    $,
+    Promise,
+    html,
+    Utils,
+    Workspace,
+    specCommon,
+    PR
+) {
     'use strict';
 
     // Just take params for now
     /* TODO: use specific arguments */
-    var factory = function (config) {
+    var factory = function(config) {
         var mount, container, runtime = config.runtime;
         var dataType, moduleName, typeName, typeVersion;
 
@@ -35,21 +36,22 @@ define([
             ul = t('ul'),
             li = t('li'),
             span = t('span'),
-            bstable = function (cols, rows) {
-                return html.makeTable({columns: cols, rows: rows, class: 'table'});
+            bstable = function(cols, rows) {
+                return html.makeTable({ columns: cols, rows: rows, class: 'table' });
             };
 
         function tabTableContent() {
             return table({
                 class: 'table table-striped table-bordered',
-                style: {width: '100%'},
-                'data-attach': 'table'});
+                style: { width: '100%' },
+                'data-attach': 'table'
+            });
         }
 
         function renderTitle(typeName) {
             var title = [
                 'Type Specification for',
-                span({style: {textDecoration: 'underline'}}, typeName)
+                span({ style: { textDecoration: 'underline' } }, typeName)
             ].join(' ');
             runtime.send('ui', 'setTitle', title);
         }
@@ -62,17 +64,20 @@ define([
                 typeNameDisplay = data.released_type_vers[data.released_type_vers.length - 1];
             }
             renderTitle(typeNameDisplay);
-            return table({class: 'table table-striped table-bordered',
-                style: 'margin-left: auto; margin-right: auto'}, [
+            return table({
+                class: 'table table-striped table-bordered',
+                style: 'margin-left: auto; margin-right: auto'
+            }, [
                 tr([th('Name'), td(typeNameDisplay)]),
                 //tr([th('Version'), td(typeVersion)]),
                 tr([th('In module version(s)'), td(
-                        bstable(['Version id', 'Created on'], data.module_vers.map(function (moduleVer) {
-                            var moduleId = moduleName + '-' + moduleVer;
-                            return [a({href: '#spec/module/' + moduleId}, moduleVer),
-                                Utils.niceTimestamp(parseInt(moduleVer, 10))];
-                        })))]),
-                tr([th('Description'), td(pre({style: {'white-space': 'pre-wrap', 'word-wrap': 'break-word'}}, data.description))])
+                    bstable(['Version id', 'Created on'], data.module_vers.map(function(moduleVer) {
+                        var moduleId = moduleName + '-' + moduleVer;
+                        return [a({ href: '#spec/module/' + moduleId }, moduleVer),
+                            Utils.niceTimestamp(parseInt(moduleVer, 10))
+                        ];
+                    })))]),
+                tr([th('Description'), td(pre({ style: { 'white-space': 'pre-wrap', 'word-wrap': 'break-word' } }, data.description))])
             ]);
             /* TODO: Add back in the kidl editor -- need to talk to Roman */
         }
@@ -80,13 +85,13 @@ define([
         // SPEC FILE Tab
         function specFileTab(data) {
             var specText = specCommon.replaceMarkedTypeLinksInSpec(moduleName, data.spec_def, 'links-click');
-            var content = div({style: {width: '100%'}}, [
-                pre({class: 'prettyprint lang-spec'}, specText.replace(/</g, '&lt;').replace(/>/g, '&gt;'))
+            var content = div({ style: { width: '100%' } }, [
+                pre({ class: 'prettyprint lang-spec' }, specText.replace(/</g, '&lt;').replace(/>/g, '&gt;'))
             ]);
             return {
                 content: content,
                 widget: {
-                    attach: function (node) {
+                    attach: function(node) {
                         PR.prettyPrint(null, node);
                     }
                 }
@@ -96,13 +101,13 @@ define([
         // FUNCTIONS Tab
         function functionsTab(data) {
             // Build The table more functionally, using datatables.
-            var tableData = data.using_func_defs.map(function (funcId) {
+            var tableData = data.using_func_defs.map(function(funcId) {
                 var parsed = funcId.match(/^(.+?)-(.+?)$/),
                     funcName = parsed[1],
                     funcVer = parsed[2];
 
                 return {
-                    name: a({href: '#spec/functions/' + funcId}, funcName),
+                    name: a({ href: '#spec/functions/' + funcId }, funcName),
                     ver: funcVer
                 };
             });
@@ -110,8 +115,8 @@ define([
                 sPaginationType: 'full_numbers',
                 iDisplayLength: 10,
                 aoColumns: [
-                    {sTitle: 'Function name', mData: 'name'},
-                    {sTitle: 'Function version', mData: 'ver'}
+                    { sTitle: 'Function name', mData: 'name' },
+                    { sTitle: 'Function version', mData: 'ver' }
                 ],
                 aaData: tableData,
                 oLanguage: {
@@ -123,7 +128,7 @@ define([
             return {
                 content: tabTableContent(),
                 widget: {
-                    attach: function (node) {
+                    attach: function(node) {
                         var n = node.querySelector('[data-attach="table"]');
                         if (n !== null) {
                             $(n).dataTable(tableSettings);
@@ -135,13 +140,13 @@ define([
 
         // USING TYPES Tab
         function usingTypesTab(data) {
-            var tableData = data.using_type_defs.map(function (typeId) {
+            var tableData = data.using_type_defs.map(function(typeId) {
                 var parsed = typeId.match(/^(.+?)-(.+?)$/),
                     typeName = parsed[1],
                     typeVer = parsed[2];
 
                 return {
-                    name: a({href: '#spec/type/' + typeId}, typeName),
+                    name: a({ href: '#spec/type/' + typeId }, typeName),
                     ver: typeVer
                 };
             });
@@ -149,8 +154,8 @@ define([
                 sPaginationType: 'full_numbers',
                 iDisplayLength: 10,
                 aoColumns: [
-                    {sTitle: 'Type name', mData: 'name'},
-                    {sTitle: 'Type version', mData: 'ver'}
+                    { sTitle: 'Type name', mData: 'name' },
+                    { sTitle: 'Type version', mData: 'ver' }
                 ],
                 aaData: tableData,
                 oLanguage: {
@@ -162,7 +167,7 @@ define([
             return {
                 content: tabTableContent(),
                 widget: {
-                    attach: function (node) {
+                    attach: function(node) {
                         var n = node.querySelector('[data-attach="table"]');
                         if (n !== null) {
                             $(n).dataTable(tableSettings);
@@ -174,13 +179,13 @@ define([
 
         // SUB TYPES Tab
         function subTypesTab(data) {
-            var tableData = data.used_type_defs.map(function (typeId) {
+            var tableData = data.used_type_defs.map(function(typeId) {
                 var parsed = typeId.match(/^(.+?)-(.+?)$/),
                     typeName = parsed[1],
                     typeVer = parsed[2];
 
                 return {
-                    name: a({href: '#spec/type/' + typeId}, typeName),
+                    name: a({ href: '#spec/type/' + typeId }, typeName),
                     ver: typeVer
                 };
             });
@@ -188,8 +193,8 @@ define([
                 sPaginationType: 'full_numbers',
                 iDisplayLength: 10,
                 aoColumns: [
-                    {sTitle: 'Type name', mData: 'name'},
-                    {sTitle: 'Type version', mData: 'ver'}
+                    { sTitle: 'Type name', mData: 'name' },
+                    { sTitle: 'Type version', mData: 'ver' }
                 ],
                 aaData: tableData,
                 oLanguage: {
@@ -200,7 +205,7 @@ define([
             return {
                 content: tabTableContent(),
                 widget: {
-                    attach: function (node) {
+                    attach: function(node) {
                         var n = node.querySelector('[data-attach="table"]');
                         if (n !== null) {
                             $(n).dataTable(tableSettings);
@@ -212,13 +217,13 @@ define([
 
         // VERSIONS Tab
         function versionsTab(data) {
-            var tableData = data.type_vers.map(function (typeId) {
+            var tableData = data.type_vers.map(function(typeId) {
                 var parsed = typeId.match(/^(.+?)-(.+?)$/),
                     typeName = parsed[1],
                     typeVer = parsed[2];
 
                 return {
-                    name: a({href: '#spec/type/' + typeId}, typeName),
+                    name: a({ href: '#spec/type/' + typeId }, typeName),
                     ver: typeVer
                 };
             });
@@ -226,8 +231,8 @@ define([
                 sPaginationType: 'full_numbers',
                 iDisplayLength: 10,
                 aoColumns: [
-                    {sTitle: 'Type name', mData: 'name'},
-                    {sTitle: 'Type version', mData: 'ver'}
+                    { sTitle: 'Type name', mData: 'name' },
+                    { sTitle: 'Type version', mData: 'ver' }
                 ],
                 aaData: tableData,
                 oLanguage: {
@@ -238,7 +243,7 @@ define([
             return {
                 content: tabTableContent(),
                 widget: {
-                    attach: function (node) {
+                    attach: function(node) {
                         var n = node.querySelector('[data-attach="table"]');
                         if (n !== null) {
                             $(n).dataTable(tableSettings);
@@ -254,30 +259,30 @@ define([
             }));
 
             return workspace.get_type_info(dataType)
-                .then(function (data) {
+                .then(function(data) {
                     var tabs = [
-                        {title: 'Overview', id: 'overview', content: overviewTab},
-                        {title: 'Spec-file', id: 'spec', content: specFileTab},
-                        /* Functions no longer means anything... */
-                        /*{title: 'Functions', id: 'funcs', content: functionsTab},*/
-                        {title: 'Using Types', id: 'types', content: usingTypesTab},
-                        {title: 'Sub-types', id: 'subs', content: subTypesTab},
-                        {title: 'Versions', id: 'vers', content: versionsTab}
-                    ],
+                            { title: 'Overview', id: 'overview', content: overviewTab },
+                            { title: 'Spec-file', id: 'spec', content: specFileTab },
+                            /* Functions no longer means anything... */
+                            /*{title: 'Functions', id: 'funcs', content: functionsTab},*/
+                            { title: 'Using Types', id: 'types', content: usingTypesTab },
+                            { title: 'Sub-types', id: 'subs', content: subTypesTab },
+                            { title: 'Versions', id: 'vers', content: versionsTab }
+                        ],
                         id = '_' + html.genId(),
                         widgets = [];
 
                     var content = div([
-                        ul({id: id, class: 'nav nav-tabs'},
-                            tabs.map(function (tab) {
+                        ul({ id: id, class: 'nav nav-tabs' },
+                            tabs.map(function(tab) {
                                 var active = (tab.id === 'overview') ? 'active' : '';
-                                return li({class: active}, a({href: '#' + tab.id + id, 'data-toggle': 'tab'}, tab.title));
+                                return li({ class: active }, a({ href: '#' + tab.id + id, 'data-toggle': 'tab' }, tab.title));
                             })),
-                        div({class: 'tab-content'}, tabs.map(function (tab) {
+                        div({ class: 'tab-content' }, tabs.map(function(tab) {
                             var active = (tab.id === 'overview') ? ' active' : '',
                                 result = tab.content(data);
                             if (typeof result === 'string') {
-                                return div({class: 'tab-pane in' + active, id: tab.id + id}, tab.content(data));
+                                return div({ class: 'tab-pane in' + active, id: tab.id + id }, tab.content(data));
                             }
                             // This is the emerging widget pattern: Save a list of widgets 
                             // and invoke them after the content is added to the dom,
@@ -287,32 +292,29 @@ define([
                                 id: widgetId,
                                 widget: result.widget
                             });
-                            return div({class: 'tab-pane in' + active, id: tab.id + id}, [
-                                div({id: widgetId}, [
+                            return div({ class: 'tab-pane in' + active, id: tab.id + id }, [
+                                div({ id: widgetId }, [
                                     result.content
                                 ])
                             ]);
-                        })
-                            )
+                        }))
                     ]);
                     container.innerHTML = content;
-                    return Promise.all(widgets.map(function (widget) {
+                    return Promise.all(widgets.map(function(widget) {
                         var n = document.getElementById(widget.id);
                         return widget.widget.attach(n);
                     }));
 
                 })
-                .then(function () {
+                .then(function() {
                     PR.prettyPrint();
                 });
         }
 
         // API
 
-        var mount, container;
-
         function attach(node) {
-            return Promise.try(function () {
+            return Promise.try(function() {
                 mount = node;
                 container = document.createElement('div');
                 mount.appendChild(container);
@@ -320,7 +322,7 @@ define([
         }
 
         function detach() {
-            return Promise.try(function () {
+            return Promise.try(function() {
                 if (mount && container) {
                     mount.removeChild(container);
                     container.innerHTML = '';
@@ -329,7 +331,7 @@ define([
         }
 
         function start(params) {
-            return Promise.try(function () {
+            return Promise.try(function() {
                 container.innerHTML = html.loading();
 
                 // Parse the data type, throwing exceptions if malformed.
@@ -366,7 +368,7 @@ define([
     };
 
     return {
-        make: function (config) {
+        make: function(config) {
             return factory(config);
         }
     };
