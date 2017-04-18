@@ -4,7 +4,7 @@ define([
     'kb_common/html',
     'kb_common/utils',
     'kb_service/client/workspace',
-    '../kbSpecCommon',
+    '../kbaseSpecCommon',
     'google-code-prettify',
     'datatables_bootstrap'
 ], function(
@@ -86,7 +86,7 @@ define([
         function specFileTab(data) {
             var specText = specCommon.replaceMarkedTypeLinksInSpec(moduleName, data.spec_def, 'links-click');
             var content = div({ style: { width: '100%' } }, [
-                pre({ class: 'prettyprint lang-spec' }, specText.replace(/</g, '&lt;').replace(/>/g, '&gt;'))
+                pre({ class: 'prettyprint lang-spec' }, specText)
             ]);
             return {
                 content: content,
