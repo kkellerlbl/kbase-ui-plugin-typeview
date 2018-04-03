@@ -36,28 +36,35 @@ define([
 
 
         function loadData(moduleId) {
-            let [, name, version] = /^(.+?)(?:-(.+?))?$/.exec(moduleId);
+            return Promise.try(() => {
+                let [name, version] = moduleId.split('-');
 
-            let workspace = new GenericClient({
-                module: 'Workspace',
-                url: runtime.config('services.workspace.url'),
-                token: runtime.service('session').getAuthToken()
-            });
-        
-            let moduleParam = {
-                mod: name
-            };
-            if (version) {
-                moduleParam.ver = parseInt(version, 10);
-            }
+                let moduleParam = {
+                    mod: name
+                }; 
+                if (typeof version === 'string') {
+                    if (!/^[\d]+$/.test(version)) {
+                        throw new Error('Module version, if provided, must be a non-negative integer');
+                    }
+                    moduleParam.ver = parseInt(version, 10);
+                }
 
-            return Promise.all([
-                workspace.callFunc('get_module_info', [moduleParam]).spread((x) => {return x;}),
-                workspace.callFunc('list_module_versions', [{mod: name}]).spread((x) => {return x;})
-            ])
-                .spread((moduleInfo, moduleVersions) => {
-                    return [name, moduleInfo, moduleVersions];
+                let workspace = new GenericClient({
+                    module: 'Workspace',
+                    url: runtime.config('services.workspace.url'),
+                    token: runtime.service('session').getAuthToken()
                 });
+            
+                
+
+                return Promise.all([
+                    workspace.callFunc('get_module_info', [moduleParam]).spread((x) => {return x;}),
+                    workspace.callFunc('list_module_versions', [{mod: name}]).spread((x) => {return x;})
+                ])
+                    .spread((moduleInfo, moduleVersions) => {
+                        return [name, moduleInfo, moduleVersions];
+                    });
+            });
         }
 
 
