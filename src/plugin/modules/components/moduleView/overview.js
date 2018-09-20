@@ -1,26 +1,15 @@
 define([
-    'knockout',
-    'kb_ko/KO',
-    'kb_ko/lib/viewModelBase',
-    'kb_ko/lib/generators',
+    'kb_knockout/registry',
+    'kb_knockout/lib/viewModelBase',
+    'kb_knockout/lib/generators',
     'kb_common/html'
 ], function (
-    ko,
-    KO,
+    reg,
     ViewModelBase,
     gen,
     html
 ) {
     'use strict';
-
-    let t = html.tag,
-        div = t('div'),
-        a = t('a'),
-        pre = t('pre'),
-        table = t('table'),
-        tr = t('tr'),
-        th = t('th'),
-        td = t('td');
 
     class ViewModel extends ViewModelBase {
         constructor(params) {
@@ -34,7 +23,16 @@ define([
 
         }
     }
-    
+
+    const t = html.tag,
+        div = t('div'),
+        a = t('a'),
+        pre = t('pre'),
+        table = t('table'),
+        tr = t('tr'),
+        th = t('th'),
+        td = t('td');
+
     function buildOwners() {
         return gen.foreach('moduleInfo.owners', div({},
             a({
@@ -55,15 +53,15 @@ define([
             class: 'table table-striped table-bordered',
         }, [
             tr([
-                th('Module name'), 
+                th('Module name'),
                 td({
                     dataBind: {
                         text: 'name'
                     }
                 })
-            ]),            
+            ]),
             tr([
-                th('Version'), 
+                th('Version'),
                 td({
                     style: {
                         fontFamily: 'monospace'
@@ -74,11 +72,11 @@ define([
                 })
             ]),
             tr([
-                th('Owners'), 
+                th('Owners'),
                 td(buildOwners())
             ]),
             tr([
-                th('Created'), 
+                th('Created'),
                 td({
                     dataBind: {
                         typedText: {
@@ -88,13 +86,13 @@ define([
                         }
                     }
                 })
-            ]),            
+            ]),
             tr([
-                th('Description'), 
-                td(pre({ 
-                    style: { 
-                        whiteSpace: 'pre-wrap', 
-                        wordWrap: 'break-word' 
+                th('Description'),
+                td(pre({
+                    style: {
+                        whiteSpace: 'pre-wrap',
+                        wordWrap: 'break-word'
                     },
                     dataBind: {
                         text: 'moduleInfo.description'
@@ -115,5 +113,5 @@ define([
         };
     }
 
-    return KO.registerComponent(component);
+    return reg.registerComponent(component);
 });

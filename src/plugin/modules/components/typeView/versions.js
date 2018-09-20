@@ -1,14 +1,14 @@
 define([
     'knockout',
-    'kb_ko/KO',
-    'kb_ko/lib/viewModelBase',
-    'kb_ko/lib/generators',
+    'kb_knockout/registry',
+    'kb_knockout/lib/viewModelBase',
+    'kb_knockout/lib/generators',
     'kb_common/html',
     '../table',
     '../typeLink'
 ], function (
     ko,
-    KO,
+    reg,
     ViewModelBase,
     gen,
     html,
@@ -17,10 +17,6 @@ define([
 ) {
     'use strict';
 
-    let t = html.tag,
-        p = t('p'),
-        div = t('div');
-
     class ViewModel extends ViewModelBase {
         constructor(params) {
             super(params);
@@ -28,7 +24,7 @@ define([
             [,this.typeId,,, this.version,,] = /^(([^.]+)\.([^-]+))-(([^.]+)\.(.*))$/.exec(params.typeInfo.type_def);
 
             this.versionsTable = params.typeInfo.type_vers.map((typeId) => {
-                let [,typeName, typeVer] = typeId.match(/^(.+?)-(.+?)$/);
+                const [,typeName, typeVer] = typeId.match(/^(.+?)-(.+?)$/);
                 return {
                     name: typeName,
                     version: typeVer,
@@ -45,6 +41,9 @@ define([
                     column: ko.observable('version'),
                     direction: ko.observable('desc')
                 },
+                rowStyle: {
+                    borderBottom: '1px silver solid'
+                },
                 columns: [
                     {
                         name: 'name',
@@ -54,18 +53,12 @@ define([
                             name: TypeLinkComponent.name(),
                             // note params interpreted in the context
                             // of the row. So, name is property of the row...
-                            params: '{name: name, id: id}'
-                        },
-                        sort: {
-                            comparator: (a, b) => {
-                                if (a < b) {
-                                    return -1;
-                                } else if (a > b) {
-                                    return 1;
-                                }
-                                return 0;
+                            params: {
+                                name: 'name',
+                                id: 'id'
                             }
-                        }
+                        },
+                        sort: null
                     },
                     {
                         name: 'version',
@@ -89,22 +82,13 @@ define([
                 return map;
             }, {});
 
-            let direction = ko.pureComputed(() => {
-                return (this.tableDef.sort.direction() === 'desc' ? -1 : 1);
-            });
-
-            this._table = ko.observableArray(this.versionsTable);
-
-            this.table = ko.pureComputed(() => {
-                return this._table.sorted((a, b) => {
-                    let c = this.tableDef.sort.column();
-                    let x = direction() * this.tableDef.columnMap[c].sort.comparator(a[c], b[c]);
-                    return x;
-                });
-            });
-
+            this.table = ko.observableArray(this.versionsTable);
         }
     }
+
+    const t = html.tag,
+        p = t('p'),
+        div = t('div');
 
     function template() {
         return div({
@@ -133,8 +117,8 @@ define([
                     component: {
                         name: TableComponent.quotedName(),
                         params: {
-                            tableDef: 'tableDef',
-                            table: 'table'
+                            table: 'tableDef',
+                            rows: 'table'
                         }
                     }
                 }
@@ -149,5 +133,5 @@ define([
         };
     }
 
-    return KO.registerComponent(component);
+    return reg.registerComponent(component);
 });
