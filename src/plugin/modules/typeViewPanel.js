@@ -1,21 +1,23 @@
 define([
     'bluebird',
     'knockout',
-    'kb_common/html',
-    'kb_ko/KO',
-    'kb_ko/lib/nanoBus',
-    'kb_ko/components/tabset',
+    'kb_lib/html',
+    'kb_knockout/registry',
+    'kb_knockout/lib/generators',
+    'kb_knockout/lib/nanoBus',
+    'kb_knockout/components/tabset',
     './components/typeView/overview',
     './components/typeView/spec',
     './components/typeView/typesUsing',
     './components/typeView/typesUsed',
     './components/typeView/versions',
-    'kb_common/jsonRpc/genericClient'
-], function(
-    Promise, 
+    'kb_lib/jsonRpc/genericClient'
+], function (
+    Promise,
     ko,
     html,
-    KO,
+    reg,
+    gen,
     NanoBus,
     TabsetComponent,
     OverviewComponent,
@@ -27,23 +29,24 @@ define([
 ) {
     'use strict';
 
-    let t = html.tag,
+    const t = html.tag,
         span = t('span');
 
     function factory(config) {
-        let hostNode, container, runtime = config.runtime;
-        let bus = new NanoBus();
+        const runtime = config.runtime;
 
+        let hostNode, container;
+        const bus = new NanoBus();
 
         function loadData(typeId) {
-            let workspace = new GenericClient({
+            const workspace = new GenericClient({
                 module: 'Workspace',
                 url: runtime.config('services.workspace.url'),
                 token: runtime.service('session').getAuthToken()
             });
 
             return workspace.callFunc('get_type_info', [typeId])
-                .spread(function(data) {
+                .spread((data) => {
                     return data;
                 });
         }
@@ -62,121 +65,98 @@ define([
         function start(params) {
             return loadData(params.typeid)
                 .then((typeInfo) => {
-                    let title = [
+                    const title = [
                         'Type Specification for',
                         span({ style: { textDecoration: 'underline' } }, params.typeid)
                     ].join(' ');
                     runtime.send('ui', 'setTitle', title);
 
-                    let vm = {
+                    const tabs =  [
+                        {
+                            id: 'overview',
+                            tab: {
+                                label: 'Overview',
+                            },
+                            panel: {
+                                component: {
+                                    name: OverviewComponent.name(),
+                                    params: {
+                                        typeInfo: 'typeInfo'
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            id: 'spec',
+                            tab: {
+                                label: 'Type Spec',
+                            },
+                            panel: {
+                                component: {
+                                    name: SpecComponent.name(),
+                                    params: {
+                                        typeInfo: 'typeInfo'
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            id: 'typesUsing',
+                            tab: {
+                                label: 'Types Using',
+                            },
+                            panel: {
+                                component: {
+                                    name: TypesUsingComponent.name(),
+                                    params: {
+                                        typeInfo: 'typeInfo'
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            id: 'typesUsed',
+                            tab: {
+                                label: 'Types used',
+                            },
+                            panel: {
+                                component: {
+                                    name: TypesUsedComponent.name(),
+                                    params: {
+                                        typeInfo: 'typeInfo'
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            id: 'versions',
+                            tab: {
+                                label: 'Versions',
+                            },
+                            panel: {
+                                component: {
+                                    name: VersionsComponent.name(),
+                                    params: {
+                                        typeInfo: 'typeInfo'
+                                    }
+                                }
+                            }
+                        }
+
+                    ];
+                    const vm = {
                         bus: bus,
-                        typeInfo: typeInfo
+                        typeInfo: typeInfo,
+                        tabs: tabs
                     };
-                    bus.on('ready', function () {
-                        bus.send('add-tab', {
-                            tab: {
-                                id: 'overview',
-                                tab: {                        
-                                    label: 'Overview',
-                                    // component: {
-                                    //     name: NarrativeTabComponent.name(),
-                                    //     params: {
-                                    //         count: params.narrativesTotal
-                                    //     }
-                                    // }
-                                },
-                                panel: {
-                                    component: {
-                                        name: OverviewComponent.name(),
-                                        // NB these params are bound here, not in the tabset.
-                                        // TODO: this should be named viewModel since that is what it is...
-                                        params: {
-                                            // view: params.view,
-                                            typeInfo: typeInfo
-                                        }
-                                    }
-                                }
-                            }
-                        }, false);
-
-                        bus.send('add-tab', {
-                            tab: {
-                                id: 'spec',
-                                tab: {                        
-                                    label: 'Type Spec',
-                                },
-                                panel: {
-                                    component: {
-                                        name: SpecComponent.name(),
-                                        params: {
-                                            typeInfo: typeInfo
-                                        }
-                                    }
-                                }
-                            }
-                        }, false);
-
-                        bus.send('add-tab', {
-                            tab: {
-                                id: 'typesUsing',
-                                tab: {                        
-                                    label: 'Types Using',
-                                },
-                                panel: {
-                                    component: {
-                                        name: TypesUsingComponent.name(),
-                                        params: {
-                                            typeInfo: typeInfo
-                                        }
-                                    }
-                                }
-                            }
-                        }, false);
-
-                        bus.send('add-tab', {
-                            tab: {
-                                id: 'typesUsed',
-                                tab: {                        
-                                    label: 'Types used',
-                                },
-                                panel: {
-                                    component: {
-                                        name: TypesUsedComponent.name(),
-                                        params: {
-                                            typeInfo: typeInfo
-                                        }
-                                    }
-                                }
-                            }
-                        }, false);
-
-                        bus.send('add-tab', {
-                            tab: {
-                                id: 'versions',
-                                tab: {                        
-                                    label: 'Versions',
-                                },
-                                panel: {
-                                    component: {
-                                        name: VersionsComponent.name(),
-                                        params: {
-                                            typeInfo: typeInfo
-                                        }
-                                    }
-                                }
-                            }
-                        }, false);
-
-                        bus.send('select-tab', 0);
-                    });
-
-                    container.innerHTML = KO.komponent({
+                    container.innerHTML = gen.component({
                         name: TabsetComponent.name(),
                         params: {
+                            tabContext: '$root',
                             bus: 'bus',
-                            
+                            tabs: 'tabs'
                         }
-                    });
+                    }).join('');
 
                     ko.applyBindings(vm, container);
                 });

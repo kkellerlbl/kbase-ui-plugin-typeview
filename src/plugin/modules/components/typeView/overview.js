@@ -1,31 +1,17 @@
 define([
-    'knockout',
-    'kb_ko/KO',
-    'kb_ko/lib/viewModelBase',
+    'kb_knockout/registry',
+    'kb_knockout/lib/viewModelBase',
     'kb_common/html'
 ], function (
-    ko,
-    KO,
+    reg,
     ViewModelBase,
     html
 ) {
     'use strict';
 
-    let t = html.tag,
-        a = t('a'),
-        pre = t('pre'),
-        table = t('table'),
-        thead = t('thead'),
-        tr = t('tr'),
-        th = t('th'),
-        tbody = t('tbody'),
-        td = t('td');
-
     class ViewModel extends ViewModelBase {
         constructor(params) {
             super(params);
-
-            // console.log('params', params);
 
             this.typeInfo = params.typeInfo;
 
@@ -35,6 +21,16 @@ define([
         }
     }
 
+    const t = html.tag,
+        a = t('a'),
+        pre = t('pre'),
+        table = t('table'),
+        thead = t('thead'),
+        tr = t('tr'),
+        th = t('th'),
+        tbody = t('tbody'),
+        td = t('td');
+
     // OVERVIEW Tab
     function buildOverview() {
         return table({
@@ -42,7 +38,7 @@ define([
             // style: 'margin-left: auto; margin-right: auto'
         }, [
             tr([
-                th('Type name'), 
+                th('Type name'),
                 td({
                     dataBind: {
                         text: 'name'
@@ -50,7 +46,7 @@ define([
                 })
             ]),
             tr([
-                th('Version'), 
+                th('Version'),
                 td({
                     dataBind: {
                         text: 'version'
@@ -58,7 +54,7 @@ define([
                 })
             ]),
             tr([
-                th('Module'), 
+                th('Module'),
                 td({
                     dataBind: {
                         text: 'module'
@@ -66,7 +62,7 @@ define([
                 })
             ]),
             tr([
-                th('In module version(s)'), 
+                th('In module version(s)'),
                 td(table({
                     class: 'table'
                 }, [
@@ -103,11 +99,11 @@ define([
                 ]))
             ]),
             tr([
-                th('Description'), 
-                td(pre({ 
-                    style: { 
-                        whiteSpace: 'pre-wrap', 
-                        wordWrap: 'break-word' 
+                th('Description'),
+                td(pre({
+                    style: {
+                        whiteSpace: 'pre-wrap',
+                        wordWrap: 'break-word'
                     },
                     dataBind: {
                         text: 'typeInfo.description'
@@ -128,5 +124,5 @@ define([
         };
     }
 
-    return KO.registerComponent(component);
+    return reg.registerComponent(component);
 });

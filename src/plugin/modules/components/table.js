@@ -1,101 +1,211 @@
 define([
-    'kb_ko/KO',
-    'kb_ko/lib/viewModelBase',
-    'kb_ko/lib/generators',
-    'kb_common/html'
+    'knockout',
+    'kb_knockout/registry',
+    'kb_knockout/lib/viewModelBase',
+    'kb_knockout/lib/generators',
+    'kb_lib/html'
 ], function (
-    KO,
+    ko,
+    reg,
     ViewModelBase,
     gen,
     html
 ) {
     'use strict';
 
-    let t = html.tag,
-        div = t('div'),
-        span = t('span');
-
     class ViewModel extends ViewModelBase {
         constructor(params) {
             super(params);
 
+            this.rows = params.rows;
             this.table = params.table;
-            
-            this.tableDef = params.tableDef;
-            if (!this.tableDef.messages) {
-                this.tableDef.messages = {};
+
+            if (!this.table.messages) {
+                this.table.messages = {};
             }
-        }        
+
+            // console.log('got rows...', this.rows());
+
+            // this.rows = ko.pureComputed(() => {
+            //     const rows = params.rows.sorted((a, b) => {
+            //         const c = this.table.sort.column();
+            //         const x = this.table.sort.direction() * this.table.columnMap[c].sort.comparator(a[c], b[c]);
+            //         return x;
+            //     });
+            //     return rows
+            //     // return params.rows;
+            // });
+
+        }
+
+        sortTable(a, b) {
+            const c = this.table.sort.column();
+            const dir = this.table.sort.direction() === 'asc' ? 1 : -1;
+            const x = dir * this.table.columnMap[c].sort.comparator(a[c], b[c]);
+            return x;
+        }
 
         doSort(data) {
-            let currentSortColumn = this.tableDef.sort.column();
-            let currentSortDirection = this.tableDef.sort.direction();
+            const currentSortColumn = this.table.sort.column();
+            const currentSortDirection = this.table.sort.direction();
             if (currentSortColumn === data.name) {
                 if (currentSortDirection === 'asc') {
-                    this.tableDef.sort.direction('desc');
+                    this.table.sort.direction('desc');
                 } else {
-                    this.tableDef.sort.direction('asc');
+                    this.table.sort.direction('asc');
                 }
             } else {
-                this.tableDef.sort.column(data.name);
-                this.tableDef.sort.direction(currentSortDirection);
+                this.table.sort.column(data.name);
+                this.table.sort.direction(currentSortDirection);
             }
+        }
+
+        calcColumnStyle(column) {
+            const style = {
+                width: column.width + '%'
+            };
+            if (column.cellStyle) {
+                Object.assign(style, column.cellStyle);
+            } else {
+                Object.assign(style, {
+                    padding: '4px'
+                });
+            }
+            return style;
+        }
+
+        stringify(obj) {
+            return '{' + Object.keys(obj).map((key) => {
+                return key + ':' + String(obj[key]);
+            }).join(',') + '}';
         }
     }
 
-    let styles = html.makeStyles({
-        header: {
+    // VIEW
+
+    const t = html.tag,
+        div = t('div'),
+        span = t('span');
+
+    const style = html.makeStyles({
+        component: {
+            css: {
+
+            }
+        },
+        table: {
+            css: {
+                flex: '1 1 0px',
+                display: 'flex',
+                flexDirection: 'column'
+            }
+        },
+        tableHeader: {
             css: {
                 '-moz-user-select': 'none',
                 '-webkit-user-select': 'none',
                 '-ms-user-select': 'none',
                 userSelect: 'none',
-                borderBottom: '1px silver solid',
-                overflowY: 'scroll'
-            },
-            pseudoElements: {
-                '-webkit-scrollbar-track': {
-                    backgroundColor: 'transparent'
-                }
+                backgroundColor: 'rgba(200,200,200,0.5)'
             }
         },
-        headerColumn: {
+        tableHeaderColumn: {
             css: {
                 display: 'inline-block',
                 fontStyle: 'italic',
-                padding: '4px',
+                // padding: '4px',
                 cursor: 'pointer',
                 userSelect: 'none'
+            }
+        },
+        tableBody: {
+            css: {
+                flex: '1 1 0px',
+                overflowY: 'auto'
             }
         },
         row: {
             css: {
 
-            },
-            pseudoClasses: {
-                hover: {
-                    backgroundColor: 'rgba(200,200,200,0.5)'
-                }
             }
         },
         cell: {
             css: {
                 display: 'inline-block',
-                padding: '4px'
+                verticalAlign: 'top',
+                wordBreak: 'break-all'
             }
         }
     });
 
-    function buildHeader() {
-        return div({ 
-            class: styles.classes.header
-        }, gen.foreach('tableDef.columns',
-            div({               
-                class: styles.classes.headerColumn,
+    // TODO: seriously twisted withing and asing.
+    // The issue is that the 'row' is lost in the with context without
+    // setting it with as, and then unpacking again with with: 'row' below.
+    // maybe use noChildContext for the column foreach?
+    // Anyhoo, it works now.
+    function buildRow() {
+        return div({
+            dataBind: {
+                with: 'row',
+                as: '"row"',
+                // noChildContext: 'true',
+                style: '$component.table.rowStyle',
+                // log: 'table'
+            }
+        }, gen.foreachAs('$component.table.columns', 'column',
+            // make the implicit context the row again.
+            div({
+                class: style.classes.cell,
                 dataBind: {
-                    style:  {
-                        width: 'width + "%"'
-                    },
+                    style: '$component.calcColumnStyle(column)'
+                }
+            }, gen.if('column.component',
+                // use the column specified for the column, using the
+                // specified params (relative to row) as input.
+                gen.with('row', span({
+                    dataBind: {
+                        component: {
+                            name: 'column.component.name',
+                            // hopefully params are relative to the row context...
+                            params: 'eval("(" + $component.stringify(column.component.params) + ")")'
+                        }
+                    }
+                })),
+                // else use the row's column value directly
+                gen.if('column.format',
+                    span({
+                        dataBind: {
+                            typedText: {
+                                value: 'row[column.name]',
+                                type: 'column.format.type',
+                                format: 'column.format.format'
+                            }
+                        }
+                    }),
+                    gen.if('column.html',
+                        span({
+                            dataBind: {
+                                html: 'row[column.name]'
+                            }
+                        }),
+                        span({
+                            dataBind: {
+                                text: 'row[column.name]'
+                            }
+                        })))))));
+    }
+
+    function buildHeader() {
+        return div({
+            class: style.classes.tableHeader
+        }, gen.foreach('table.columns',
+            div({
+                class: style.classes.tableHeaderColumn,
+                dataBind: {
+                    style: '$component.calcColumnStyle($data)',
+                    // style:  {
+                    //     width: 'width + "%"'
+                    // },
                     click: 'function (d, e) {$component.doSort.call($component,d,e);}'
                 }
             }, [
@@ -108,12 +218,12 @@ define([
                     dataBind: {
                         visible: 'sort',
                         css: {
-                            'fa-sort-desc': '$component.tableDef.sort.column() === name && $component.tableDef.sort.direction() === "desc"',
-                            'fa-sort-asc': '$component.tableDef.sort.column() === name && $component.tableDef.sort.direction() === "asc"',
-                            'fa-sort': '$component.tableDef.sort.column() !== name'
+                            'fa-sort-desc': '$component.table.sort.column() === name && $component.table.sort.direction() === "desc"',
+                            'fa-sort-asc': '$component.table.sort.column() === name && $component.table.sort.direction() === "asc"',
+                            'fa-sort': '$component.table.sort.column() !== name'
                         },
                         style: {
-                            color: '$component.tableDef.sort.column() !== name ? "#AAA" : "#000"'
+                            color: '$component.table.sort.column() !== name ? "#AAA" : "#000"'
                         }
                     },
                     style: {
@@ -125,79 +235,6 @@ define([
         ));
     }
 
-    function buildRow() {
-        return div({
-            class: styles.classes.row,
-            dataBind: {
-                with: 'row'
-            }
-        }, gen.foreachAs('$component.tableDef.columns', 'column', 
-            // make the implicit context the row again.
-            gen.if('column.component',  
-                // use the column specified for the column, using the
-                // specified params (relative to row) as input.               
-                div({
-                    style: {
-                        display: 'inline-block',
-                        padding: '4px'
-                    },
-                    dataBind: {
-                        style:  {
-                            width: 'column.width + "%"'
-                        }
-                    }
-                }, span({
-                    dataBind: {
-                        component: {
-                            name: 'column.component.name',
-                            // hopefully params are relative to the row context...
-                            params: 'eval("(" + column.component.params + ")")'
-                            // params: {
-                            //     username: 'username',
-                            //     realname: 'realname'
-                            // }
-                        },
-                        // text: 'column.component.name'
-                    }
-                })),
-                gen.if('column.type', 
-                    div({
-                        class: styles.classes.cell,                   
-                        dataBind: {
-                            style:  {
-                                width: 'column.width + "%"'
-                            }
-                        }
-                    }, span({
-                        dataBind: {
-                            typedText: {
-                                value: 'row[column.name]',
-                                type: 'column.type',
-                                format: 'column.format'
-                            },
-                            style: 'column.style'
-                        }
-                        // dataBind: {
-                        //     text: 'column.format'
-                        // }
-                    })),
-                    // else use the row's column value directly
-                    div({
-                        class: styles.classes.cell,
-                        dataBind: {
-                            style:  {
-                                width: 'column.width + "%"'
-                            }
-                        }
-                    }, span({
-                        dataBind: {
-                            text: 'row[column.name]',
-                            style: 'column.style'
-                        }
-                    })))
-            )));
-    }
-
     function buildEmptyTable() {
         return div({
             class: 'well',
@@ -206,39 +243,33 @@ define([
                 margin: '10px auto 0 auto',
                 textAlign: 'center'
             }
-        }, gen.if('tableDef.messages.empty', 
+        }, gen.if('table.messages.empty',
             div({
                 dataBind: {
-                    text: 'tableDef.messages.empty'
+                    text: 'table.messages.empty'
                 }
             }),
             div('This table is empty')));
     }
 
     function buildTable() {
-        // we loop across all the columns; remember, this is invoked 
-        // within the row, so we need to reach back up to get the
-        // row context.
+        const rowTemplate = buildRow();
         return div({
-            style: {
-                display: 'flex',
-                flex: '1 1 0px',
-                flexDirection: 'column'
-            },
+            class: style.classes.table,
             dataBind: {
                 style: {
-                    'background-color': 'tableDef.style.backgroundColor'
+                    'background-color': 'table.style && table.style.backgroundColor ? table.style.backgroundColor : "#FFF"'
                 }
             }
         }, [
-            buildHeader(),             
+            buildHeader(),
             div({
-                style: {
-                    overflowY: 'scroll',
-                    flex: '1 1 0px'
-                }
-            }, gen.if('table().length > 0', 
-                gen.foreachAs('table', 'row', buildRow()),
+                class: style.classes.tableBody
+            }, gen.if('rows().length > 0',
+                gen.foreachAs(
+                    'rows.sorted((a,b) => {return $component.sortTable.call($component,a,b)})',
+                    'row',
+                    rowTemplate),
                 buildEmptyTable()))
         ]);
     }
@@ -251,9 +282,9 @@ define([
         return {
             viewModel: ViewModel,
             template: template(),
-            stylesheet: styles.sheet
+            stylesheet: style.sheet
         };
     }
 
-    return KO.registerComponent(component);
+    return reg.registerComponent(component);
 });

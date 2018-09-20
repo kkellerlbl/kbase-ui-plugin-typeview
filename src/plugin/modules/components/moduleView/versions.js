@@ -1,14 +1,14 @@
 define([
     'knockout',
-    'kb_ko/KO',
-    'kb_ko/lib/viewModelBase',
-    'kb_ko/lib/generators',
+    'kb_knockout/registry',
+    'kb_knockout/lib/viewModelBase',
+    'kb_knockout/lib/generators',
     'kb_common/html',
     '../table',
     '../moduleVersionLink'
 ], function (
     ko,
-    KO,
+    reg,
     ViewModelBase,
     gen,
     html,
@@ -16,10 +16,6 @@ define([
     ModuleVersionLinkComponent
 ) {
     'use strict';
-
-    let t = html.tag,
-        p = t('p'),
-        div = t('div');
 
     class ViewModel extends ViewModelBase {
         constructor(params) {
@@ -30,7 +26,7 @@ define([
             this.moduleVersion = params.moduleInfo.ver;
 
             this.versionsTable = params.moduleVersions.vers.map((version) => {
-                let current = version === this.moduleVersion;
+                const current = version === this.moduleVersion;
                 return {
                     version: version,
                     created: version,
@@ -49,22 +45,24 @@ define([
                     column: ko.observable('created'),
                     direction: ko.observable('asc')
                 },
-                columns: [                   
+                columns: [
                     {
                         name: 'version',
                         label: 'Module version',
                         width: 50,
                         sort: {
                             comparator: (a, b) => {
-                                // okay, the version is major.minor, which looks enough like
-                                // a float that we can just sort like that :)
                                 return (b - a);
                             }
                         },
                         component: {
                             name: ModuleVersionLinkComponent.name(),
-                            params: '{version: version, id: id, current: current}'
-                        }                 
+                            params: {
+                                version: 'version',
+                                id: 'id',
+                                current: 'current'
+                            }
+                        }
                     },
                     {
                         name: 'created',
@@ -72,8 +70,6 @@ define([
                         width: 50,
                         sort: {
                             comparator: (a, b) => {
-                                // okay, the version is major.minor, which looks enough like
-                                // a float that we can just sort like that :)
                                 return (b - a);
                             }
                         },
@@ -88,22 +84,13 @@ define([
                 return map;
             }, {});
 
-            let direction = ko.pureComputed(() => {
-                return (this.tableDef.sort.direction() === 'desc' ? -1 : 1);
-            });
-
-            this._table = ko.observableArray(this.versionsTable);
-
-            this.table = ko.pureComputed(() => {
-                return this._table.sorted((a, b) => {
-                    let c = this.tableDef.sort.column();
-                    let x = direction() * this.tableDef.columnMap[c].sort.comparator(a[c], b[c]);
-                    return x;
-                });
-            });
-
+            this.table = ko.observableArray(this.versionsTable);
         }
     }
+
+    const t = html.tag,
+        p = t('p'),
+        div = t('div');
 
     function template() {
         return div({
@@ -132,8 +119,8 @@ define([
                     component: {
                         name: TableComponent.quotedName(),
                         params: {
-                            tableDef: 'tableDef',
-                            table: 'table'
+                            table: 'tableDef',
+                            rows: 'table'
                         }
                     }
                 }
@@ -148,5 +135,5 @@ define([
         };
     }
 
-    return KO.registerComponent(component);
+    return reg.registerComponent(component);
 });

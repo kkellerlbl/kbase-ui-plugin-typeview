@@ -1,14 +1,14 @@
 define([
     'knockout',
-    'kb_ko/KO',
-    'kb_ko/lib/viewModelBase',
-    'kb_ko/lib/generators',
+    'kb_knockout/registry',
+    'kb_knockout/lib/viewModelBase',
+    'kb_knockout/lib/generators',
     'kb_common/html',
     '../table',
     '../typeLink'
 ], function (
     ko,
-    KO,
+    reg,
     ViewModelBase,
     gen,
     html,
@@ -16,10 +16,6 @@ define([
     TypeLinkComponent
 ) {
     'use strict';
-
-    let t = html.tag,
-        div = t('div'),
-        p = t('p');
 
     class ViewModel extends ViewModelBase {
         constructor(params) {
@@ -30,14 +26,14 @@ define([
             this.moduleInfo = params.moduleInfo;
 
             this.typesTable = Object.keys(params.moduleInfo.types).map((typeId) => {
-                let [,typeName, typeVer] = typeId.match(/^(.+?)-(.+?)$/);
+                const [,typeName, typeVer] = typeId.match(/^(.+?)-(.+?)$/);
                 return {
                     name: typeName,
                     version: typeVer,
                     id: typeId
                 };
             });
-            
+
             this.tableDef = {
                 style: {
                     maxHeight: '20em',
@@ -57,9 +53,10 @@ define([
                         width: 50,
                         component: {
                             name: TypeLinkComponent.name(),
-                            // note params interpreted in the context
-                            // of the row. So, name is property of the row...
-                            params: '{name: name, id: id}'
+                            params: {
+                                name: 'name',
+                                id: 'id'
+                            }
                         },
                         sort: {
                             comparator: (a, b) => {
@@ -78,14 +75,12 @@ define([
                         width: 50,
                         sort: {
                             comparator: (a, b) => {
-                                // okay, the version is major.minor, which looks enough like
-                                // a float that we can just sort like that :)
                                 return (parseFloat(b) - parseFloat(a));
                             }
                         },
                         style: {
                             fontFamily: 'monospace'
-                        }                  
+                        }
                     }
                 ]
             };
@@ -94,21 +89,13 @@ define([
                 return map;
             }, {});
 
-            let direction = ko.pureComputed(() => {
-                return (this.tableDef.sort.direction() === 'desc' ? -1 : 1);
-            });
-
-            this._table = ko.observableArray(this.typesTable);
-
-            this.table = ko.pureComputed(() => {
-                return this._table.sorted((a, b) => {
-                    let c = this.tableDef.sort.column();
-                    let x = direction() * this.tableDef.columnMap[c].sort.comparator(a[c], b[c]);
-                    return x;
-                });
-            });            
+            this.table = ko.observableArray(this.typesTable);
         }
     }
+
+    const t = html.tag,
+        div = t('div'),
+        p = t('p');
 
     function template() {
         return div({
@@ -125,7 +112,7 @@ define([
                     gen.text('moduleName'),
                     ', version ',
                     gen.text('moduleInfo.ver'),
-                    '.' 
+                    '.'
                 ])
             ]),
             div({
@@ -139,8 +126,8 @@ define([
                     component: {
                         name: TableComponent.quotedName(),
                         params: {
-                            tableDef: 'tableDef',
-                            table: 'table'
+                            table: 'tableDef',
+                            rows: 'table'
                         }
                     }
                 }
@@ -155,5 +142,5 @@ define([
         };
     }
 
-    return KO.registerComponent(component);
+    return reg.registerComponent(component);
 });
