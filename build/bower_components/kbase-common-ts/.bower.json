@@ -1,0 +1,26 @@
+{
+  "name": "kbase-common-ts",
+  "description": "KBase Common Typescript",
+  "main": "dist/*.js",
+  "authors": [
+    "Erik Pearson <eapearson@lbl.gov>"
+  ],
+  "license": "SEE LICENSE IN LICENSE",
+  "homepage": "https://github.com/kbase/kbase-common-ts",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test"
+  ],
+  "version": "0.19.0",
+  "_release": "0.19.0",
+  "_resolution": {
+    "type": "version",
+    "tag": "v0.19.0",
+    "commit": "8dd0b137b06185fda14121351dfa00848d5959b4"
+  },
+  "_source": "https://github.com/kbase/kbase-common-ts.git",
+  "_target": "0.19.0",
+  "_originalSource": "kbase-common-ts"
+}
