@@ -215,6 +215,10 @@ define(['kb_lib/html', './windowChannel', 'kb_lib/httpUtils'], function (html, W
                 window.document.body.click();
             });
 
+            this.channel.on('set-title', ({ title }) => {
+                this.runtime.send('ui', 'setTitle', title);
+            });
+
             this.channel.start();
         }
 
