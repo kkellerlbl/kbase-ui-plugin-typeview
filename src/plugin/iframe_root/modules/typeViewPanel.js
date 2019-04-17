@@ -45,10 +45,9 @@ define([
                 token: runtime.service('session').getAuthToken()
             });
 
-            return workspace.callFunc('get_type_info', [typeId])
-                .spread((data) => {
-                    return data;
-                });
+            return workspace.callFunc('get_type_info', [typeId]).spread((data) => {
+                return data;
+            });
         }
 
         // API
@@ -60,106 +59,107 @@ define([
             container.style['flex-direction'] = 'column';
             container.style.flex = '1 1 0px';
             container.style.margin = '0 10px';
+            container.setAttribute('data-k-b-testhook-plugin', 'typeview');
         }
 
         function start(params) {
-            return loadData(params.typeid)
-                .then((typeInfo) => {
-                    const title = [
-                        'Type Specification for',
-                        span({ style: { textDecoration: 'underline' } }, params.typeid)
-                    ].join(' ');
-                    runtime.send('ui', 'setTitle', title);
+            return loadData(params.typeid).then((typeInfo) => {
+                const title = [
+                    'Type Specification for',
+                    span({ style: { textDecoration: 'underline' } }, params.typeid)
+                ].join(' ');
+                runtime.send('ui', 'setTitle', title);
 
-                    const tabs =  [
-                        {
-                            id: 'overview',
-                            tab: {
-                                label: 'Overview',
-                            },
-                            panel: {
-                                component: {
-                                    name: OverviewComponent.name(),
-                                    params: {
-                                        typeInfo: 'typeInfo'
-                                    }
-                                }
-                            }
+                const tabs = [
+                    {
+                        id: 'overview',
+                        tab: {
+                            label: 'Overview'
                         },
-                        {
-                            id: 'spec',
-                            tab: {
-                                label: 'Type Spec',
-                            },
-                            panel: {
-                                component: {
-                                    name: SpecComponent.name(),
-                                    params: {
-                                        typeInfo: 'typeInfo'
-                                    }
-                                }
-                            }
-                        },
-                        {
-                            id: 'typesUsing',
-                            tab: {
-                                label: 'Types Using',
-                            },
-                            panel: {
-                                component: {
-                                    name: TypesUsingComponent.name(),
-                                    params: {
-                                        typeInfo: 'typeInfo'
-                                    }
-                                }
-                            }
-                        },
-                        {
-                            id: 'typesUsed',
-                            tab: {
-                                label: 'Types used',
-                            },
-                            panel: {
-                                component: {
-                                    name: TypesUsedComponent.name(),
-                                    params: {
-                                        typeInfo: 'typeInfo'
-                                    }
-                                }
-                            }
-                        },
-                        {
-                            id: 'versions',
-                            tab: {
-                                label: 'Versions',
-                            },
-                            panel: {
-                                component: {
-                                    name: VersionsComponent.name(),
-                                    params: {
-                                        typeInfo: 'typeInfo'
-                                    }
+                        panel: {
+                            component: {
+                                name: OverviewComponent.name(),
+                                params: {
+                                    typeInfo: 'typeInfo'
                                 }
                             }
                         }
-
-                    ];
-                    const vm = {
-                        bus: bus,
-                        typeInfo: typeInfo,
-                        tabs: tabs
-                    };
-                    container.innerHTML = gen.component({
+                    },
+                    {
+                        id: 'spec',
+                        tab: {
+                            label: 'Type Spec'
+                        },
+                        panel: {
+                            component: {
+                                name: SpecComponent.name(),
+                                params: {
+                                    typeInfo: 'typeInfo'
+                                }
+                            }
+                        }
+                    },
+                    {
+                        id: 'typesUsing',
+                        tab: {
+                            label: 'Types Using'
+                        },
+                        panel: {
+                            component: {
+                                name: TypesUsingComponent.name(),
+                                params: {
+                                    typeInfo: 'typeInfo'
+                                }
+                            }
+                        }
+                    },
+                    {
+                        id: 'typesUsed',
+                        tab: {
+                            label: 'Types used'
+                        },
+                        panel: {
+                            component: {
+                                name: TypesUsedComponent.name(),
+                                params: {
+                                    typeInfo: 'typeInfo'
+                                }
+                            }
+                        }
+                    },
+                    {
+                        id: 'versions',
+                        tab: {
+                            label: 'Versions'
+                        },
+                        panel: {
+                            component: {
+                                name: VersionsComponent.name(),
+                                params: {
+                                    typeInfo: 'typeInfo'
+                                }
+                            }
+                        }
+                    }
+                ];
+                const vm = {
+                    bus: bus,
+                    typeInfo: typeInfo,
+                    tabs: tabs
+                };
+                container.innerHTML = gen
+                    .component({
                         name: TabsetComponent.name(),
                         params: {
                             tabContext: '$root',
                             bus: 'bus',
                             tabs: 'tabs'
                         }
-                    }).join('');
+                    })
+                    .join('');
 
-                    ko.applyBindings(vm, container);
-                });
+                ko.applyBindings(vm, container);
+            });
         }
 
         function stop() {
@@ -173,7 +173,10 @@ define([
         }
 
         return {
-            attach, start, stop, detach
+            attach,
+            start,
+            stop,
+            detach
         };
     }
 

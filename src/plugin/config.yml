@@ -40,7 +40,7 @@ install:
           reentrant: false
         - path: [spec, { type: 'rest', name: 'path' }]
           widget: kb_plugin_typeview
-          authorization: true
+          authorization: false
           reentrant: true
           captureExtraPath: true
           captureExtraSearch: true

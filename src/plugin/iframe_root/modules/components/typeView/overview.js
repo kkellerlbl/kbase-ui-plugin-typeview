@@ -38,7 +38,8 @@ define(['kb_knockout/registry', 'kb_knockout/lib/viewModelBase', 'kb_lib/html'],
                     td({
                         dataBind: {
                             text: 'name'
-                        }
+                        },
+                        dataKBTesthookField: 'name'
                     })
                 ]),
                 tr([
@@ -54,7 +55,8 @@ define(['kb_knockout/registry', 'kb_knockout/lib/viewModelBase', 'kb_lib/html'],
                     td({
                         dataBind: {
                             text: 'module'
-                        }
+                        },
+                        dataKBTesthookField: 'module'
                     })
                 ]),
                 tr([
