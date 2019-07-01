@@ -1,15 +1,11 @@
 {
     "name": "kbase-ui-plugin-typeview",
-    "description": "A kbase-ui plugin for viewinging data type objects",
+    "description": "A kbase-ui plugin for viewing data type objects",
     "keywords": ["kbase", "widget"],
-    "author": [
-        "eapearson@lbl.gov"
-    ],
+    "author": ["eapearson@lbl.gov"],
     "moduleType": "kbase-ui-plugin",
     "main": "src/plugin/config.yml",
-    "ignore": [
-        ".gitignore"
-    ],
+    "ignore": [".gitignore"],
     "dependencies": {
         "bluebird": "^3.0.0",
         "kbase-common-js": "^2.5.0",
