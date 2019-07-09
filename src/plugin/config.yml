@@ -1,37 +1,46 @@
-## YAML Template.
+## Plugin Configuration
 ---
 package:
     author: Erik Pearson
     name: typeview
-    description: View a type
-    date: August 19, 2015
-    version: 0.0.1
+    description: The typeview panel and associated widgets
+    date: April 2, 2019
 source:
     ## sources are relative to build/plugins/PACKAGE/source/javascript
-    ## NB: need to quote file names, otherwise 
+    ## NB: need to quote file names, otherwise
     modules:
-    dependencies:
-        -   
-            module: google-code-prettify
-        -
-            module: bluebird
     styles:
-       - 
-            file: styles.css
+        # - file: styles.css
 install:
     widgets:
-        -
-            module: ./typeViewPanel
-            id: kb_typeview_typeViewPanel
-            type: factory
-        -
-            module: ./moduleViewPanel
-            id: kb_typeview_moduleViewPanel
-            type: factory
+        - module: ./panel
+          id: kb_plugin_typeview
+          type: es6
     routes:
-        -
-            path: ['spec', 'type', {type: 'param', name: 'typeid'}]
-            widget: kb_typeview_typeViewPanel
-        -
-            path: ['spec', 'module', {type: 'param', name: 'moduleid'}]
-            widget: kb_typeview_moduleViewPanel
+        - path: ['spec', 'type', { type: 'param', name: 'typeid' }]
+          queryParams:
+              path: { literal: ['type'] }
+          widget: kb_plugin_typeview
+          # don't need auth
+          authorization: false
+          reentrant: false
+        - path: ['spec', 'module', { type: 'param', name: 'moduleid' }]
+          queryParams:
+              path: { literal: ['module'] }
+          widget: kb_plugin_typeview
+          # don't need auth
+          authorization: false
+          reentrant: false
+        - path: ['typeview', 'type', { type: 'param', name: 'typeid' }]
+          queryParams:
+              path: { literal: ['type'] }
+          widget: kb_plugin_typeview
+          # don't need auth
+          authorization: false
+          reentrant: false
+        - path: [spec, { type: 'rest', name: 'path' }]
+          widget: kb_plugin_typeview
+          authorization: false
+          reentrant: true
+          captureExtraPath: true
+          captureExtraSearch: true

@@ -1,0 +1,34 @@
+{
+    "name": "kbase-service-clients-js",
+    "description": "Javascript clients for KBase Services and related utilities",
+    "author": [
+        "kbase"
+    ],
+    "keywords": [
+        "kbase",
+        "service",
+        "client"
+    ],
+    "authors": [
+        "Erik Pearson <eapearson@lbl.gov>"
+    ],
+    "moduleType": "amd-library",
+    "repository": {
+        "type": "git",
+        "url": "git://github.com/kbase/kbase-service-clients-js"
+    },
+    "main": "dist/**/*",
+    "dependencies": {
+        "jquery": "^2.1.0",
+        "bluebird": "^3.0.0",
+        "spark-md5": "^3.0.0",
+        "kbase-common-js": "^2.5.0"
+    },
+    "devDependencies": {},
+    "ignore": [
+        "src",
+        ".gitignore",
+        "package.json"
+    ],
+    "license": "SEE LICENSE IN LICENSE.md"
+}

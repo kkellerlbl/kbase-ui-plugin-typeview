@@ -1,0 +1,35 @@
+{
+  "name": "kbase-ui-es6lib",
+  "description": "A library collection for kbase ui in es6",
+  "keywords": [
+    "kbase",
+    "library"
+  ],
+  "author": [
+    "eapearson@lbl.gov"
+  ],
+  "main": "src/**/*.js",
+  "ignore": [
+    ".gitignore"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/kbase/kbase-ui-es6lib"
+  },
+  "dependencies": {
+    "pure-uuid": "eapearson/pure-uuid#1.1.1"
+  },
+  "devDependencies": {},
+  "license": "SEE LICENSE IN LICENSE.md",
+  "homepage": "https://github.com/eapearson/kbase-common-es6",
+  "version": "0.10.16",
+  "_release": "0.10.16",
+  "_resolution": {
+    "type": "version",
+    "tag": "v0.10.16",
+    "commit": "22af7bda7615f75b865b8b91dd51770d059c2c46"
+  },
+  "_source": "https://github.com/eapearson/kbase-common-es6.git",
+  "_target": "0.10.16",
+  "_originalSource": "kbase-common-es6"
+}

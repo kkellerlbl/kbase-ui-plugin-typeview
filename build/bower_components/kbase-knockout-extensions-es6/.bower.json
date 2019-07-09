@@ -1,0 +1,39 @@
+{
+  "name": "kbase-ko-components-js",
+  "description": "KBase Common Knockout Components",
+  "main": "src/**/*",
+  "moduleType": "amd-library",
+  "moduleRoot": "kb_ko",
+  "authors": [
+    "Erik Pearson <eapearson@lbl.gov>"
+  ],
+  "license": "SEE LICENSE IN LICENSE",
+  "homepage": "https://github.com/kbase/kbase-ko-components-js",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test"
+  ],
+  "dependencies": {
+    "kbase-common-es6": "^0.10.0",
+    "knockout": "^3.5.0-rc",
+    "knockout-arraytransforms": "^2.1.1",
+    "knockout-switch-case": "^2.1.0",
+    "knockout-validation": "^2.0.3",
+    "marked": "^0.6.0",
+    "moment": "^2.20.1",
+    "numeral": "^2.0.4",
+    "pure-uuid": "eapearson/pure-uuid#1.1.1"
+  },
+  "version": "0.6.16",
+  "_release": "0.6.16",
+  "_resolution": {
+    "type": "version",
+    "tag": "v0.6.16",
+    "commit": "709a4f12f54aa33ac38a0dc5f49be99254dfe266"
+  },
+  "_source": "https://github.com/eapearson/kbase-knockout-extensions-es6.git",
+  "_target": "0.6.16",
+  "_originalSource": "kbase-knockout-extensions-es6"
+}
