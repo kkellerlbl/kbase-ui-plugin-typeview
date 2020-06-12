@@ -2,10 +2,9 @@ define([
     'bluebird',
     'knockout',
     'kb_lib/html',
-    'kb_knockout/registry',
     'kb_knockout/lib/generators',
     'kb_knockout/lib/nanoBus',
-    'kb_knockout/components/tabset',
+    'lib/tabset',
     './components/typeView/overview',
     './components/typeView/spec',
     './components/typeView/typesUsing',
@@ -16,7 +15,6 @@ define([
     Promise,
     ko,
     html,
-    reg,
     gen,
     NanoBus,
     TabsetComponent,
@@ -36,7 +34,89 @@ define([
         const runtime = config.runtime;
 
         let hostNode, container;
+
         const bus = new NanoBus();
+
+        const tabs = [
+            {
+                id: 'overview',
+                tab: {
+                    label: 'Overview'
+                },
+                panel: {
+                    component: {
+                        name: OverviewComponent.name(),
+                        params: {
+                            typeInfo: 'typeInfo'
+                        }
+                    }
+                }
+            },
+            {
+                id: 'spec',
+                tab: {
+                    label: 'Type Spec'
+                },
+                panel: {
+                    component: {
+                        name: SpecComponent.name(),
+                        params: {
+                            typeInfo: 'typeInfo'
+                        }
+                    }
+                }
+            },
+            {
+                id: 'typesUsing',
+                tab: {
+                    label: 'Types Using'
+                },
+                panel: {
+                    component: {
+                        name: TypesUsingComponent.name(),
+                        params: {
+                            typeInfo: 'typeInfo'
+                        }
+                    }
+                }
+            },
+            {
+                id: 'typesUsed',
+                tab: {
+                    label: 'Types used'
+                },
+                panel: {
+                    component: {
+                        name: TypesUsedComponent.name(),
+                        params: {
+                            typeInfo: 'typeInfo'
+                        }
+                    }
+                }
+            },
+            {
+                id: 'versions',
+                tab: {
+                    label: 'Versions'
+                },
+                panel: {
+                    component: {
+                        name: VersionsComponent.name(),
+                        params: {
+                            typeInfo: 'typeInfo'
+                        }
+                    }
+                }
+            }
+        ];
+
+        const vm = {
+            bus,
+            tabContext: {
+                typeInfo: ko.observable()
+            },
+            tabs
+        };
 
         function loadData(typeId) {
             const workspace = new GenericClient({
@@ -68,90 +148,16 @@ define([
                     'Type Specification for',
                     span({ style: { textDecoration: 'underline' } }, params.typeid)
                 ].join(' ');
+
                 runtime.send('ui', 'setTitle', title);
 
-                const tabs = [
-                    {
-                        id: 'overview',
-                        tab: {
-                            label: 'Overview'
-                        },
-                        panel: {
-                            component: {
-                                name: OverviewComponent.name(),
-                                params: {
-                                    typeInfo: 'typeInfo'
-                                }
-                            }
-                        }
-                    },
-                    {
-                        id: 'spec',
-                        tab: {
-                            label: 'Type Spec'
-                        },
-                        panel: {
-                            component: {
-                                name: SpecComponent.name(),
-                                params: {
-                                    typeInfo: 'typeInfo'
-                                }
-                            }
-                        }
-                    },
-                    {
-                        id: 'typesUsing',
-                        tab: {
-                            label: 'Types Using'
-                        },
-                        panel: {
-                            component: {
-                                name: TypesUsingComponent.name(),
-                                params: {
-                                    typeInfo: 'typeInfo'
-                                }
-                            }
-                        }
-                    },
-                    {
-                        id: 'typesUsed',
-                        tab: {
-                            label: 'Types used'
-                        },
-                        panel: {
-                            component: {
-                                name: TypesUsedComponent.name(),
-                                params: {
-                                    typeInfo: 'typeInfo'
-                                }
-                            }
-                        }
-                    },
-                    {
-                        id: 'versions',
-                        tab: {
-                            label: 'Versions'
-                        },
-                        panel: {
-                            component: {
-                                name: VersionsComponent.name(),
-                                params: {
-                                    typeInfo: 'typeInfo'
-                                }
-                            }
-                        }
-                    }
-                ];
-                const vm = {
-                    bus: bus,
-                    typeInfo: typeInfo,
-                    tabs: tabs
-                };
+                vm.tabContext.typeInfo(typeInfo);
+
                 container.innerHTML = gen
                     .component({
                         name: TabsetComponent.name(),
                         params: {
-                            tabContext: '$root',
+                            tabContext: 'tabContext',
                             bus: 'bus',
                             tabs: 'tabs'
                         }
@@ -159,6 +165,26 @@ define([
                     .join('');
 
                 ko.applyBindings(vm, container);
+
+                if (params.tab) {
+                    vm.bus.send('select-tab', params.tab);
+                }
+            });
+        }
+
+        function run(params) {
+            return loadData(params.typeid).then((typeInfo) => {
+                const title = [
+                    'Type Specification for',
+                    span({ style: { textDecoration: 'underline' } }, params.typeid)
+                ].join(' ');
+                runtime.send('ui', 'setTitle', title);
+
+                if (params.tab) {
+                    vm.bus.send('select-tab', params.tab);
+                }
+
+                vm.typeInfo(typeInfo);
             });
         }
 
@@ -175,6 +201,7 @@ define([
         return {
             attach,
             start,
+            run,
             stop,
             detach
         };

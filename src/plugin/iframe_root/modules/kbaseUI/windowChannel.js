@@ -1,17 +1,9 @@
-define([], function () {
+define([
+    'uuid'
+], function (
+    Uuid
+) {
     'use strict';
-
-    // copy pasta: https://stackoverflow.com/questions/105034/create-guid-uuid-in-javascript
-    function uuidv4() {
-        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-            const r = (Math.random() * 16) | 0;
-            if (c === 'x') {
-                return r.toString(16);
-            } else {
-                return ((r & 0x3) | 0x8).toString(16);
-            }
-        });
-    }
 
     class Listener {
         constructor(config) {
@@ -25,7 +17,7 @@ define([], function () {
         constructor({ from, to }) {
             this.from = from;
             this.to = to;
-            this.id = uuidv4();
+            this.id = new Uuid(4).format();
             this.created = new Date();
         }
 
@@ -73,7 +65,7 @@ define([], function () {
 
             // The channel id. Used to filter all messages received to
             // this channel.
-            this.channelId = uuidv4();
+            this.channelId =  new Uuid(4).format();
 
             this.partnerId = to;
 
@@ -89,9 +81,11 @@ define([], function () {
             this.sentCount = 0;
             this.receivedCount = 0;
 
-            this.unwelcomeReceivedCount = 0;
-            this.unwelcomeReceivedCountThreshhold = 100;
-            this.unwelcomeReceiptWarning = true;
+            this.isDebug = true;
+        }
+
+        setDebug(isDebug) {
+            this.isDebug = isDebug;
         }
 
         setPartner(partnerChannelId) {
@@ -117,32 +111,25 @@ define([], function () {
 
         receiveMessage(messageEvent) {
             const message = messageEvent.data;
+
+
             if (!message) {
-                this.unwelcomeReceivedCount++;
-                if (this.unwelcomeReceiptWarning) {
+                if (this.isDebug) {
                     console.warn('No message data; message ignored', messageEvent);
                 }
                 return;
             }
             if (!message.envelope) {
-                this.unwelcomeReceivedCount++;
-                if (this.unwelcomeReceiptWarning) {
-                    console.warn('No message envelope, not from KBase; message ignored', messageEvent);
+                if (this.isDebug) {
+                    console.warn('No message envelope, not from KBase; message ignored', message);
                 }
                 return;
             }
-            if (!message.envelope.to === this.channelId) {
-                this.unwelcomeReceivedCount++;
-                if (this.unwelcomeReceiptWarning) {
-                    console.warn('Message envelope does not match this channel\'s id', messageEvent);
+            if (message.envelope.to !== this.channelId) {
+                if (this.isDebug) {
+                    console.warn('Message envelope does not match this channel\'s id', message);
                 }
                 return;
-            }
-            if (this.unwelcomeReceiptWarningCount > this.unwelcomeReceivedCountThreshhold) {
-                this.unwelcomeReceiptWarning = false;
-                console.warn(
-                    'Unwelcome message warning disabled after ' + this.unwelcomeReceiptWarningCount + ' instances.'
-                );
             }
 
             // A message sent as a request will have registered a response handler
@@ -363,7 +350,7 @@ define([], function () {
 
             // The host for the window; required for postmessage
             this.host = host || document.location.origin;
-            this.channelId = uuidv4();
+            this.channelId = new Uuid(4).format();
             this.partnerId = to;
             this.lastId = 0;
             this.sentCount = 0;
@@ -416,7 +403,7 @@ define([], function () {
 
             // The channel id. Used to filter all messages received to
             // this channel.
-            this.channelId = uuidv4();
+            this.channelId = new Uuid(4).format();
 
             this.partnerId = to;
 
@@ -432,9 +419,11 @@ define([], function () {
             this.sentCount = 0;
             this.receivedCount = 0;
 
-            this.unwelcomeReceivedCount = 0;
-            this.unwelcomeReceivedCountThreshhold = 100;
-            this.unwelcomeReceiptWarning = true;
+            this.isDebug = true;
+        }
+
+        setDebug(isDebug) {
+            this.isDebug = isDebug;
         }
 
         setPartner(partnerChannelId) {
@@ -453,31 +442,22 @@ define([], function () {
         receiveMessage(messageEvent) {
             const message = messageEvent.data;
             if (!message) {
-                this.unwelcomeReceivedCount++;
-                if (this.unwelcomeReceiptWarning) {
+                if (this.isDebug) {
                     console.warn('No message data; message ignored', messageEvent);
                 }
                 return;
             }
             if (!message.envelope) {
-                this.unwelcomeReceivedCount++;
-                if (this.unwelcomeReceiptWarning) {
+                if (this.isDebug) {
                     console.warn('No message envelope, not from KBase; message ignored', messageEvent);
                 }
                 return;
             }
             if (!message.envelope.to === this.channelId) {
-                this.unwelcomeReceivedCount++;
-                if (this.unwelcomeReceiptWarning) {
+                if (this.isDebug) {
                     console.warn('Message envelope does not match this channel\'s id', messageEvent);
                 }
                 return;
-            }
-            if (this.unwelcomeReceiptWarningCount > this.unwelcomeReceivedCountThreshhold) {
-                this.unwelcomeReceiptWarning = false;
-                console.warn(
-                    'Unwelcome message warning disabled after ' + this.unwelcomeReceiptWarningCount + ' instances.'
-                );
             }
 
             // A message sent as a request will have registered a response handler

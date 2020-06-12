@@ -25,13 +25,15 @@ define([
 
             this.moduleInfo = params.moduleInfo;
 
-            this.typesTable = Object.keys(params.moduleInfo.types).map((typeId) => {
-                const [,typeName, typeVer] = typeId.match(/^(.+?)-(.+?)$/);
-                return {
-                    name: typeName,
-                    version: typeVer,
-                    id: typeId
-                };
+            this.typesTable = ko.pureComputed(() => {
+                return Object.keys(params.moduleInfo().types).map((typeId) => {
+                    const [,typeName, typeVer] = typeId.match(/^(.+?)-(.+?)$/);
+                    return {
+                        name: typeName,
+                        version: typeVer,
+                        id: typeId
+                    };
+                });
             });
 
             this.tableDef = {
@@ -88,8 +90,6 @@ define([
                 map[column.name] = column;
                 return map;
             }, {});
-
-            this.table = ko.observableArray(this.typesTable);
         }
     }
 
@@ -111,7 +111,7 @@ define([
                     'This table shows all types defined by this module: ',
                     gen.text('moduleName'),
                     ', version ',
-                    gen.text('moduleInfo.ver'),
+                    gen.text('moduleInfo().ver'),
                     '.'
                 ])
             ]),
@@ -127,7 +127,7 @@ define([
                         name: TableComponent.quotedName(),
                         params: {
                             table: 'tableDef',
-                            rows: 'table'
+                            rows: 'typesTable'
                         }
                     }
                 }

@@ -1,46 +1,49 @@
 ## Plugin Configuration
 ---
 package:
-    author: Erik Pearson
-    name: typeview
-    description: The typeview panel and associated widgets
-    date: April 2, 2019
-source:
-    ## sources are relative to build/plugins/PACKAGE/source/javascript
-    ## NB: need to quote file names, otherwise
-    modules:
-    styles:
-        # - file: styles.css
+  name: typeview
+  description: The typeview panel and associated widgets
 install:
-    widgets:
-        - module: ./panel
-          id: kb_plugin_typeview
-          type: es6
-    routes:
-        - path: ['spec', 'type', { type: 'param', name: 'typeid' }]
-          queryParams:
-              path: { literal: ['type'] }
-          widget: kb_plugin_typeview
-          # don't need auth
-          authorization: false
-          reentrant: false
-        - path: ['spec', 'module', { type: 'param', name: 'moduleid' }]
-          queryParams:
-              path: { literal: ['module'] }
-          widget: kb_plugin_typeview
-          # don't need auth
-          authorization: false
-          reentrant: false
-        - path: ['typeview', 'type', { type: 'param', name: 'typeid' }]
-          queryParams:
-              path: { literal: ['type'] }
-          widget: kb_plugin_typeview
-          # don't need auth
-          authorization: false
-          reentrant: false
-        - path: [spec, { type: 'rest', name: 'path' }]
-          widget: kb_plugin_typeview
-          authorization: false
-          reentrant: true
-          captureExtraPath: true
-          captureExtraSearch: true
+  routes:
+    - path: ["spec", "type", {type: "param", name: "typeid"}]
+      # spec/type/MODULE.TYPE
+      queryParams:
+        path: {literal: ["type"]}
+        tab: {}
+      params:
+        view: type
+      component: /pluginSupport/Plugin
+      # don't need auth
+      authorization: false
+      reentrant: false
+    - path: ["spec", "module", {type: "param", name: "moduleid"}]
+      # spec/module/MODULE
+      queryParams:
+        path: {literal: ["module"]}
+        tab: {}
+      params:
+        view: module
+      component: /pluginSupport/Plugin
+      # don't need auth
+      authorization: false
+      reentrant: false
+    - path: ["typeview", "type", {type: "param", name: "typeid"}]
+      # typeview/type/MODULE.TYPE
+      queryParams:
+        path: {literal: ["type"]}
+        tab: {}
+      params:
+        view: type
+      component: /pluginSupport/Plugin
+      # don't need auth
+      authorization: false
+      reentrant: false
+    - path: [spec, {type: "rest", name: "path"}]
+      params:
+        view: main
+      # spec/a/b/c?x=y
+      component: /pluginSupport/Plugin
+      authorization: false
+      reentrant: true
+      captureExtraPath: true
+      captureExtraSearch: true

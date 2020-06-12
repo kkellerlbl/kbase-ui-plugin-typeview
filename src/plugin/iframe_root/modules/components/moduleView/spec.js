@@ -1,9 +1,11 @@
 define([
+    'knockout',
     'kb_knockout/registry',
     'kb_knockout/lib/viewModelBase',
     'kb_lib/html',
     '../../lib/syntax'
 ], function (
+    ko,
     reg,
     ViewModelBase,
     html,
@@ -17,8 +19,10 @@ define([
 
             this.name = params.moduleName;
 
-            const highlighted = syntax.highlightKIDL(params.moduleInfo.spec);
-            this.typeSpec = syntax.replaceMarkedTypeLinksInSpec(name, highlighted.value);
+            this.typeSpec = ko.pureComputed(() => {
+                const highlighted = syntax.highlightKIDL(params.moduleInfo().spec);
+                return syntax.replaceMarkedTypeLinksInSpec(name, highlighted.value);
+            });
         }
     }
 

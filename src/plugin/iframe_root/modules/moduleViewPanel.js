@@ -4,7 +4,7 @@ define([
     'kb_lib/html',
     'kb_knockout/lib/generators',
     'kb_knockout/lib/nanoBus',
-    'kb_knockout/components/tabset',
+    'lib/tabset',
     './components/moduleView/overview',
     './components/moduleView/spec',
     './components/moduleView/types',
@@ -34,6 +34,95 @@ define([
         const runtime = config.runtime;
         let hostNode, container;
         const bus = new NanoBus();
+        const tabs = [
+            {
+                id: 'overview',
+                tab: {
+                    label: 'Overview'
+                },
+                panel: {
+                    component: {
+                        name: OverviewComponent.name(),
+                        // NB these params are bound here, not in the tabset.
+                        // TODO: this should be named viewModel since that is what it is...
+                        params: {
+                            // view: params.view,
+                            moduleName: 'moduleName',
+                            moduleInfo: 'moduleInfo'
+                        }
+                    }
+                }
+            },
+            {
+                id: 'spec',
+                tab: {
+                    label: 'Spec'
+                },
+                panel: {
+                    component: {
+                        name: SpecComponent.name(),
+                        params: {
+                            moduleName: 'moduleName',
+                            moduleInfo: 'moduleInfo'
+                        }
+                    }
+                }
+            },
+            {
+                id: 'typesUsing',
+                tab: {
+                    label: 'Types'
+                },
+                panel: {
+                    component: {
+                        name: TypesComponent.name(),
+                        params: {
+                            moduleName: 'moduleName',
+                            moduleInfo: 'moduleInfo'
+                        }
+                    }
+                }
+            },
+            {
+                id: 'includedModules',
+                tab: {
+                    label: 'Included modules'
+                },
+                panel: {
+                    component: {
+                        name: ModulesIncludedComponent.name(),
+                        params: {
+                            moduleName: 'moduleName',
+                            moduleInfo: 'moduleInfo'
+                        }
+                    }
+                }
+            },
+            {
+                id: 'versions',
+                tab: {
+                    label: 'Versions'
+                },
+                panel: {
+                    component: {
+                        name: VersionsComponent.name(),
+                        params: {
+                            moduleName: 'moduleName',
+                            moduleInfo: 'moduleInfo',
+                            moduleVersions: 'moduleVersions'
+                        }
+                    }
+                }
+            }
+        ];
+        const vm = {
+            bus, tabs,
+            tabContext: {
+                moduleName: ko.observable(),
+                moduleInfo: ko.observable(),
+                moduleVersions: ko.observable()
+            }
+        };
 
         function loadData(moduleId) {
             return Promise.try(() => {
@@ -92,97 +181,9 @@ define([
 
                         runtime.send('ui', 'setTitle', title);
 
-                        const tabs = [
-                            {
-                                id: 'overview',
-                                tab: {
-                                    label: 'Overview'
-                                },
-                                panel: {
-                                    component: {
-                                        name: OverviewComponent.name(),
-                                        // NB these params are bound here, not in the tabset.
-                                        // TODO: this should be named viewModel since that is what it is...
-                                        params: {
-                                            // view: params.view,
-                                            moduleName: 'moduleName',
-                                            moduleInfo: 'moduleInfo'
-                                        }
-                                    }
-                                }
-                            },
-                            {
-                                id: 'spec',
-                                tab: {
-                                    label: 'Spec'
-                                },
-                                panel: {
-                                    component: {
-                                        name: SpecComponent.name(),
-                                        params: {
-                                            moduleName: 'moduleName',
-                                            moduleInfo: 'moduleInfo'
-                                        }
-                                    }
-                                }
-                            },
-                            {
-                                id: 'typesUsing',
-                                tab: {
-                                    label: 'Types'
-                                },
-                                panel: {
-                                    component: {
-                                        name: TypesComponent.name(),
-                                        params: {
-                                            moduleName: 'moduleName',
-                                            moduleInfo: 'moduleInfo'
-                                        }
-                                    }
-                                }
-                            },
-                            {
-                                id: 'includedModules',
-                                tab: {
-                                    label: 'Included modules'
-                                },
-                                panel: {
-                                    component: {
-                                        name: ModulesIncludedComponent.name(),
-                                        params: {
-                                            moduleName: 'moduleName',
-                                            moduleInfo: 'moduleInfo'
-                                        }
-                                    }
-                                }
-                            },
-                            {
-                                id: 'versions',
-                                tab: {
-                                    label: 'Versions'
-                                },
-                                panel: {
-                                    component: {
-                                        name: VersionsComponent.name(),
-                                        params: {
-                                            moduleName: 'moduleName',
-                                            moduleInfo: 'moduleInfo',
-                                            moduleVersions: 'moduleVersions'
-                                        }
-                                    }
-                                }
-                            }
-                        ];
-
-                        const vm = {
-                            bus: bus,
-                            tabContext: {
-                                moduleName: moduleName,
-                                moduleInfo: moduleInfo,
-                                moduleVersions: moduleVersions
-                            },
-                            tabs: tabs
-                        };
+                        vm.tabContext.moduleName(moduleName);
+                        vm.tabContext.moduleInfo(moduleInfo);
+                        vm.tabContext.moduleVersions(moduleVersions);
 
                         container.innerHTML = gen
                             .component({
@@ -196,6 +197,33 @@ define([
                             .join('');
 
                         ko.applyBindings(vm, container);
+
+                        if (params.tab) {
+                            vm.bus.send('select-tab', params.tab);
+                        }
+                    })
+            );
+        }
+
+        function run(params) {
+            return (
+                loadData(params.moduleid)
+                    // NOTE: Annoying but true, the module info does not contain the module name.
+                    .spread((moduleName, moduleInfo, moduleVersions) => {
+                        const title = [
+                            'Module Specification for',
+                            span({ style: { textDecoration: 'underline' } }, params.moduleid)
+                        ].join(' ');
+
+                        runtime.send('ui', 'setTitle', title);
+
+                        if (params.tab) {
+                            vm.bus.send('select-tab', params.tab);
+                        }
+
+                        vm.tabContext.moduleName(moduleName);
+                        vm.tabContext.moduleInfo(moduleInfo);
+                        vm.tabContext.moduleVersions(moduleVersions);
                     })
             );
         }
@@ -213,6 +241,7 @@ define([
         return {
             attach,
             start,
+            run,
             stop,
             detach
         };
