@@ -2,7 +2,7 @@ define(['./windowChannel', './runtime'], (WindowChannel, Runtime) => {
     'use strict';
 
     class Integration {
-        constructor({ rootWindow }) {
+        constructor({ rootWindow, pluginConfigDB }) {
             this.rootWindow = rootWindow;
             this.container = rootWindow.document.body;
             // channelId, frameId, hostId, parentHost
@@ -11,6 +11,7 @@ define(['./windowChannel', './runtime'], (WindowChannel, Runtime) => {
 
             // The original params from the plugin (taken from the url)
             this.pluginParams = this.hostParams.params;
+            this.pluginConfigDB = pluginConfigDB;
 
             this.authorized = null;
 
@@ -98,9 +99,8 @@ define(['./windowChannel', './runtime'], (WindowChannel, Runtime) => {
                 const { path, params } = message;
 
                 // TODO: proper routing to error page
-                if (!path || path.length === 0) {
-                    console.warn('no view provided', JSON.stringify(message));
-                    alert('no view provided...');
+                if ((!path || path.length === 0) && !params.view) {
+                    console.warn('No view provided!', path, params);
                     return;
                 }
 
@@ -145,9 +145,13 @@ define(['./windowChannel', './runtime'], (WindowChannel, Runtime) => {
                 // ready message, is itself ready, and is ready for
                 // the iframe app to start running.
                 this.channel.on('start', (payload) => {
-                    const { token, username, config, realname, email } = payload;
+                    const {
+                        authorization,
+                        config
+                    } = payload;
+                    const { token, username, realname } = authorization;
                     if (token) {
-                        this.authorization = { token, username, realname, email };
+                        this.authorization = { token, username, realname };
                     } else {
                         this.authorization = null;
                     }
@@ -157,9 +161,11 @@ define(['./windowChannel', './runtime'], (WindowChannel, Runtime) => {
                     this.authorized = token ? true : false;
 
                     this.runtime = new Runtime({
+                        authorization,
                         config,
                         token,
-                        username
+                        username,
+                        pluginConfigDB: this.pluginConfigDB
                     });
 
                     this.runtime
@@ -239,7 +245,9 @@ define(['./windowChannel', './runtime'], (WindowChannel, Runtime) => {
                 // on the same channel, with control via the channel id. However, there is a risk
                 // the the channels will listen on for the same message ... unlikely though.
                 // Still, it would be odd for one window to listen for messages on another...
-                this.channel.send('ready', {});
+                this.channel.send('ready', {
+                    channelId: this.channel.channelId
+                });
             });
         }
 

@@ -1,17 +1,32 @@
-define(['kb_knockout/registry', 'kb_knockout/lib/viewModelBase', 'kb_lib/html'], function (reg, ViewModelBase, html) {
+define([
+    'knockout',
+    'kb_knockout/registry',
+    'kb_knockout/lib/viewModelBase',
+    'kb_lib/html'
+],
+function (
+    ko,
+    reg,
+    ViewModelBase,
+    html
+) {
     'use strict';
 
     class ViewModel extends ViewModelBase {
         constructor(params) {
             super(params);
 
-            this.typeInfo = params.typeInfo;
-
-            [, this.module, this.name, this.major, this.minor] = /^([^.]+)\.([^-]+)-([^.]+)\.(.*)$/.exec(
-                this.typeInfo.type_def
-            );
-
-            this.version = this.major + '.' + this.minor;
+            this.typeInfo = ko.pureComputed(() => {
+                const [, module, name, major, minor] = /^([^.]+)\.([^-]+)-([^.]+)\.(.*)$/.exec(
+                    params.typeInfo().type_def
+                );
+                return {
+                    module, name, major, minor,
+                    version: `${major}.${minor}`,
+                    moduleVersions: params.typeInfo().module_vers,
+                    description: params.typeInfo().description
+                };
+            });
         }
     }
 
@@ -29,7 +44,10 @@ define(['kb_knockout/registry', 'kb_knockout/lib/viewModelBase', 'kb_lib/html'],
     function buildOverview() {
         return table(
             {
-                class: 'table table-striped table-bordered'
+                class: 'table table-striped table-bordered',
+                dataBind: {
+                    with: 'typeInfo'
+                }
                 // style: 'margin-left: auto; margin-right: auto'
             },
             [
@@ -71,7 +89,7 @@ define(['kb_knockout/registry', 'kb_knockout/lib/viewModelBase', 'kb_lib/html'],
                                 tbody(
                                     {
                                         dataBind: {
-                                            foreach: 'typeInfo.module_vers'
+                                            foreach: 'moduleVersions'
                                         }
                                     },
                                     tr([
@@ -82,7 +100,7 @@ define(['kb_knockout/registry', 'kb_knockout/lib/viewModelBase', 'kb_lib/html'],
                                                 },
                                                 dataBind: {
                                                     attr: {
-                                                        href: '"/#spec/module/" + $component.module + "-" + $data'
+                                                        href: '"/#spec/module/" + $component.typeInfo().module + "-" + $data'
                                                     },
                                                     text: '$data'
                                                 }
@@ -112,7 +130,7 @@ define(['kb_knockout/registry', 'kb_knockout/lib/viewModelBase', 'kb_lib/html'],
                                 wordWrap: 'break-word'
                             },
                             dataBind: {
-                                text: 'typeInfo.description'
+                                text: '$component.typeInfo().description'
                             }
                         })
                     )

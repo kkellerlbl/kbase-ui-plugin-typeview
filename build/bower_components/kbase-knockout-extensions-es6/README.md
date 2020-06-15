@@ -1,2 +1,0 @@
-# Extensions to Knockout JS
-

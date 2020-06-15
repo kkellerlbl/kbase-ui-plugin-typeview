@@ -1,4 +1,10 @@
-define(['kb_knockout/registry', 'kb_knockout/lib/viewModelBase', 'kb_lib/html', '../../lib/syntax'], function (
+define([
+    'knockout',
+    'kb_knockout/registry',
+    'kb_knockout/lib/viewModelBase',
+    'kb_lib/html', '../../lib/syntax'],
+function (
+    ko,
     reg,
     ViewModelBase,
     html,
@@ -10,14 +16,13 @@ define(['kb_knockout/registry', 'kb_knockout/lib/viewModelBase', 'kb_lib/html', 
         constructor(params) {
             super(params);
 
-            // console.log('params', params);
-
-            this.typeInfo = params.typeInfo;
-
-            const [, typeModule, , ,] = /^([^.]+)\.([^-]+)-([^.]+)\.(.*)$/.exec(this.typeInfo.type_def);
-
-            const highlighted = syntax.highlightKIDL(this.typeInfo.spec_def);
-            this.typeSpec = syntax.replaceMarkedTypeLinksInSpec(typeModule, highlighted.value);
+            this.typeSpec = ko.pureComputed(() => {
+                const [, module, , , ] = /^([^.]+)\.([^-]+)-([^.]+)\.(.*)$/.exec(
+                    params.typeInfo().type_def
+                );
+                const highlighted = syntax.highlightKIDL(params.typeInfo().spec_def);
+                return syntax.replaceMarkedTypeLinksInSpec(module, highlighted.value);
+            });
         }
     }
 

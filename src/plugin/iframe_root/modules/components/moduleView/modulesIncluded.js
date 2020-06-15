@@ -5,8 +5,16 @@ define([
     'kb_knockout/lib/generators',
     'kb_lib/html',
     '../table',
-    '../typeLink'
-], function (ko, reg, ViewModelBase, gen, html, TableComponent, TypeLinkComponent) {
+    '../moduleLink'
+], function (
+    ko,
+    reg,
+    ViewModelBase,
+    gen,
+    html,
+    TableComponent,
+    ModuleLinkComponent
+) {
     'use strict';
 
     class ViewModel extends ViewModelBase {
@@ -14,15 +22,20 @@ define([
             super(params);
 
             this.moduleName = params.moduleName;
-            this.moduleVersion = params.moduleInfo.ver;
+            this.moduleVersion = ko.pureComputed(() => {
+                return params.moduleInfo().ver;
+            });
 
-            this.includeModulesTable = Object.keys(params.moduleInfo.included_spec_version).map((moduleName) => {
-                const version = params.moduleInfo.included_spec_version[moduleName];
-                return {
-                    name: moduleName,
-                    version: version,
-                    id: moduleName + '-' + version
-                };
+            this.table = ko.pureComputed(() => {
+                return Object.keys(params.moduleInfo().included_spec_version)
+                    .map((moduleName) => {
+                        const version = params.moduleInfo().included_spec_version[moduleName];
+                        return {
+                            name: moduleName,
+                            version: version,
+                            id: moduleName + '-' + version
+                        };
+                    });
             });
 
             this.tableDef = {
@@ -43,10 +56,11 @@ define([
                         label: 'Type name',
                         width: 50,
                         component: {
-                            name: TypeLinkComponent.name(),
+                            name: ModuleLinkComponent.name(),
                             params: {
                                 name: 'name',
-                                id: 'id'
+                                id: 'id',
+                                tab: '"overview"'
                             }
                         },
                         sort: {
@@ -81,8 +95,6 @@ define([
                 map[column.name] = column;
                 return map;
             }, {});
-
-            this.table = ko.observableArray(this.includeModulesTable);
         }
     }
 

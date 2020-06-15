@@ -9,81 +9,89 @@ define([
 ], function (ko, reg, ViewModelBase, gen, html, TableComponent, TypeLinkComponent) {
     'use strict';
 
+    const TABLE_DEF = {
+        style: {
+            maxHeight: '20em',
+            backgroundColor: '#FFF'
+        },
+        sort: {
+            column: ko.observable('name'),
+            direction: ko.observable('desc')
+        },
+        messages: {
+            empty: 'No other types are using this type'
+        },
+        columns: [
+            {
+                name: 'name',
+                label: 'Type ID',
+                width: 50,
+                component: {
+                    name: TypeLinkComponent.name(),
+                    params: {
+                        name: 'name',
+                        id: 'id',
+                        tab: '"overview"'
+                    }
+                },
+                sort: {
+                    comparator: (a, b) => {
+                        if (a < b) {
+                            return -1;
+                        } else if (a > b) {
+                            return 1;
+                        }
+                        return 0;
+                    }
+                }
+            },
+            {
+                name: 'version',
+                label: 'Type version',
+                width: 50,
+                sort: {
+                    comparator: (a, b) => {
+                        // okay, the version is major.minor, which looks enough like
+                        // a float that we can just sort like that :)
+                        return parseFloat(b) - parseFloat(a);
+                    }
+                },
+                style: {
+                    fontFamily: 'monospace'
+                }
+            }
+        ]
+    };
+    TABLE_DEF.columnMap = TABLE_DEF.columns.reduce((map, column) => {
+        map[column.name] = column;
+        return map;
+    }, {});
+
     class ViewModel extends ViewModelBase {
         constructor(params) {
             super(params);
 
-            [, this.typeId, , , this.version, ,] = /^(([^.]+)\.([^-]+))-(([^.]+)\.(.*))$/.exec(
-                params.typeInfo.type_def
-            );
-
-            this.usingTypeTable = params.typeInfo.using_type_defs.map((typeId) => {
-                const [, typeName, typeVer] = typeId.match(/^(.+?)-(.+?)$/);
+            this.typeInfo = ko.pureComputed(() => {
+                const [, typeId, , , version, ,] = /^(([^.]+)\.([^-]+))-(([^.]+)\.(.*))$/.exec(
+                    params.typeInfo().type_def
+                );
                 return {
-                    name: typeName,
-                    version: typeVer,
-                    id: typeId
+                    typeId, version
                 };
             });
 
-            this.tableDef = {
-                style: {
-                    maxHeight: '20em',
-                    backgroundColor: '#FFF'
-                },
-                sort: {
-                    column: ko.observable('name'),
-                    direction: ko.observable('desc')
-                },
-                messages: {
-                    empty: 'No other types are using this type'
-                },
-                columns: [
-                    {
-                        name: 'name',
-                        label: 'Type ID',
-                        width: 50,
-                        component: {
-                            name: TypeLinkComponent.name(),
-                            params: {
-                                name: 'name',
-                                id: 'id'
-                            }
-                        },
-                        sort: {
-                            comparator: (a, b) => {
-                                if (a < b) {
-                                    return -1;
-                                } else if (a > b) {
-                                    return 1;
-                                }
-                                return 0;
-                            }
-                        }
-                    },
-                    {
-                        name: 'version',
-                        label: 'Type version',
-                        width: 50,
-                        sort: {
-                            comparator: (a, b) => {
-                                // okay, the version is major.minor, which looks enough like
-                                // a float that we can just sort like that :)
-                                return parseFloat(b) - parseFloat(a);
-                            }
-                        },
-                        style: {
-                            fontFamily: 'monospace'
-                        }
-                    }
-                ]
-            };
-            this.tableDef.columnMap = this.tableDef.columns.reduce((map, column) => {
-                map[column.name] = column;
-                return map;
-            }, {});
+            this.table = ko.pureComputed(() => {
+                return params.typeInfo().using_type_defs.map((typeId) => {
+                    const [, typeName, typeVer] = typeId.match(/^(.+?)-(.+?)$/);
+                    return {
+                        name: typeName,
+                        version: typeVer,
+                        id: typeId
+                    };
+                });
+            });
 
-            this.table = ko.observableArray(this.usingTypeTable);
+            this.tableDef = TABLE_DEF;
         }
     }
 
@@ -105,9 +113,9 @@ define([
                 div([
                     p([
                         'This table shows all other types which use this type: ',
-                        gen.text('typeId'),
+                        gen.text('typeInfo().typeId'),
                         ', version ',
-                        gen.text('version'),
+                        gen.text('typeInfo().version'),
                         '.'
                     ])
                 ]),

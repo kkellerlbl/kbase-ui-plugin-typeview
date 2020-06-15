@@ -15,12 +15,8 @@ define([
         constructor(params) {
             super(params);
 
-            // console.log('params', params);
-
             this.moduleInfo = params.moduleInfo;
-
             this.name = params.moduleName;
-
         }
     }
 
@@ -34,11 +30,11 @@ define([
         td = t('td');
 
     function buildOwners() {
-        return gen.foreach('moduleInfo.owners', div({},
+        return gen.foreach('owners', div({},
             a({
                 dataBind: {
                     attr: {
-                        href: '"#people/" + $data'
+                        href: '"/#people/" + $data'
                     },
                     text: '$data'
                 },
@@ -60,44 +56,46 @@ define([
                     }
                 })
             ]),
-            tr([
-                th('Version'),
-                td({
-                    style: {
-                        fontFamily: 'monospace'
-                    },
-                    dataBind: {
-                        text: 'moduleInfo.ver'
-                    }
-                })
-            ]),
-            tr([
-                th('Owners'),
-                td(buildOwners())
-            ]),
-            tr([
-                th('Created'),
-                td({
-                    dataBind: {
-                        typedText: {
-                            value: 'moduleInfo.ver',
-                            type: '"date"',
-                            format: '"MMM D, YYYY [at] h:MMa"'
+            gen.with('moduleInfo', [
+                tr([
+                    th('Version'),
+                    td({
+                        style: {
+                            fontFamily: 'monospace'
+                        },
+                        dataBind: {
+                            text: 'ver'
                         }
-                    }
-                })
-            ]),
-            tr([
-                th('Description'),
-                td(pre({
-                    style: {
-                        whiteSpace: 'pre-wrap',
-                        wordWrap: 'break-word'
-                    },
-                    dataBind: {
-                        text: 'moduleInfo.description'
-                    }
-                }))
+                    })
+                ]),
+                tr([
+                    th('Owners'),
+                    td(buildOwners())
+                ]),
+                tr([
+                    th('Created'),
+                    td({
+                        dataBind: {
+                            typedText: {
+                                value: 'ver',
+                                type: '"date"',
+                                format: '"MMM D, YYYY [at] h:MMa"'
+                            }
+                        }
+                    })
+                ]),
+                tr([
+                    th('Description'),
+                    td(pre({
+                        style: {
+                            whiteSpace: 'pre-wrap',
+                            wordWrap: 'break-word'
+                        },
+                        dataBind: {
+                            text: 'description'
+                        }
+                    }))
+                ])
             ])
         ]);
     }

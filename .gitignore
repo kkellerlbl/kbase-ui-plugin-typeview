@@ -1,4 +1,6 @@
 /nbproject/private/
 .DS_Store
 node_modules/
-bower_modules/
+/build/bower_components/
+_attic/
+dist/

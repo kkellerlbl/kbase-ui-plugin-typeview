@@ -23,17 +23,17 @@ define([
 
             this.moduleName = params.moduleName;
 
-            this.moduleVersion = params.moduleInfo.ver;
-
-            this.versionsTable = params.moduleVersions.vers.map((version) => {
-                const current = version === this.moduleVersion;
-                return {
-                    version: version,
-                    created: version,
-                    name: this.moduleName,
-                    current: current,
-                    id: this.moduleName + '-' + String(version)
-                };
+            this.table = ko.pureComputed(() => {
+                return params.moduleVersions().vers.map((version) => {
+                    const current = version === params.moduleInfo().ver;
+                    return {
+                        version: version,
+                        created: version,
+                        name: this.moduleName(),
+                        current: current,
+                        id: this.moduleName() + '-' + String(version)
+                    };
+                });
             });
 
             this.tableDef = {
@@ -83,8 +83,6 @@ define([
                 map[column.name] = column;
                 return map;
             }, {});
-
-            this.table = ko.observableArray(this.versionsTable);
         }
     }
 

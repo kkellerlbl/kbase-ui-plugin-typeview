@@ -24,17 +24,9 @@ define([
                 this.table.messages = {};
             }
 
-            // console.log('got rows...', this.rows());
-
-            // this.rows = ko.pureComputed(() => {
-            //     const rows = params.rows.sorted((a, b) => {
-            //         const c = this.table.sort.column();
-            //         const x = this.table.sort.direction() * this.table.columnMap[c].sort.comparator(a[c], b[c]);
-            //         return x;
-            //     });
-            //     return rows
-            //     // return params.rows;
-            // });
+            this.sortedRows = ko.pureComputed(() => {
+                return this.rows().sort(this.sortTable.bind(this));
+            });
 
         }
 
@@ -262,12 +254,18 @@ define([
                 }
             }
         }, [
+            div({
+                dataBind: {
+                    text: 'console.log($component.sortedRows());'
+                }
+            }),
             buildHeader(),
             div({
                 class: style.classes.tableBody
             }, gen.if('rows().length > 0',
                 gen.foreachAs(
-                    'rows.sorted((a,b) => {return $component.sortTable.call($component,a,b)})',
+                    // 'rows.sorted((a,b) => {return $component.sortTable.call($component,a,b)})',
+                    '$component.sortedRows',
                     'row',
                     rowTemplate),
                 buildEmptyTable()))

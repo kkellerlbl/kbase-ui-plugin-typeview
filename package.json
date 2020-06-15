@@ -1,0 +1,23 @@
+{
+    "name": "kbase-ui-plugin-typeview",
+    "version": "0.1.0",
+    "description": "Landing pages (viewers) for KBase Workspace types and type modules",
+    "main": "index.js",
+    "scripts": {
+        "build": "bash scripts/build-plugin.bash",
+        "build-dev": "bash scripts/build-plugin-dev.bash"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/kbase/kbase-ui-plugin-typeview.git"
+    },
+    "author": "",
+    "license": "SEE LICENSE IN LICENSE.md",
+    "bugs": {
+        "url": "https://github.com/kbase/kbase-ui-plugin-typeviewissues"
+    },
+    "homepage": "https://github.com/kbase/kbase-ui-plugin-typeview#readme",
+    "devDependencies": {
+        "eslint": "7.2.0"
+    }
+}
